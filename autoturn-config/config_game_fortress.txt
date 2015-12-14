@@ -1,0 +1,5 @@
+# enable/disable fortress, bonuses, and mines
+# 1 for true, 0 for false
+fortress_enable 1
+bonus_enable 0
+mine_enable 0
