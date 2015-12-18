@@ -6,57 +6,39 @@ import copy
 import random
 
 import config
-import pygame_game
+import sdl_game
 import screens
+from experiment import exp
 
-def setup_video(fullscreen, create_display):
-    pygame.init()
-    if create_display:
-        if fullscreen:
-            pygame.display.set_mode((1024, 768), pygame.FULLSCREEN)
-        else:
-            pygame.display.set_mode((1024, 768))
-        pygame.display.set_icon(pygame.image.load("gfx/psficon.png").convert_alpha())
-        pygame.mouse.set_visible(False)
+def get_screen(name, game):
+    # print name
+    if name == 'instructions':
+        return screens.instructions("Ask Experimenter for Instructions")
+    elif name == 'basic-task':
+        return screens.basic_task()
+    elif name == 'total-score':
+        return screens.total_score(len(exp.game_list), True, int(game.config['score_time']), 'continue', game)
+    else:
+        raise Exception('unknown screen "%s"'%name)
+
+def gen_screens():
+    for s in config.as_list(exp.gc,'session_start_screens'):
+        exp.screens.append(get_screen(s, None))
+    gnum = 0
+    for g in exp.game_list:
+        c = config.read_conf(config.get_game_config_file(g),
+                             copy.deepcopy(exp.gc),
+                             exp.config_path, ["#", "\n"])
+        game = sdl_game.SDLGame(c, g, gnum+1)
+        for s in config.as_list(exp.gc,'pre_game_screens'):
+            exp.screens.append(get_screen(s, game))
+        exp.screens.append(game)
+        # print g
+        for s in config.as_list(exp.gc,'post_game_screens'):
+            exp.screens.append(get_screen(s, game))
+        gnum += 1
+    exp.screens.append(screens.bonus())
 
 if __name__ == '__main__':
-    # Load config files
-    (gc,config_path) = config.get_global_config()
-
-    setup_video(int(gc['fullscreen']) == 1, int(gc['model']) == 0 or int(gc['display_level'])>0)
-    if int(gc['display_level']) > 0:
-        config.prompt_for_missing_keys(gc,config_path)
-        config.prompt_for_simulation_keys(gc)
-    config.load_session_and_condition(gc,config_path)
-    # Generate seeds for session
-    if gc.has_key('session'):
-        random.seed(gc['sessions'].index(gc['session'])+hash(gc["id"]))
-    else:
-        random.seed(hash(gc["id"]))
-    seeds = [random.randint(0,10000) for x in xrange(config.get_num_games(gc))]
-    # Games
-    game_list = config.get_games(gc)
-    gstart = config.get_start_game(gc)
-    total_bonus = 0
-    # model
-    model = False
-    if int(gc['model']) == 1:
-        model = Model(int(gc['model_port']), int(gc['display_level']), gc['model_line_endings'])
-        model.wait_for_connection()
-
-    for g in xrange(gstart-1,len(game_list)):
-        # Initialize world
-        random.seed(seeds[g])
-        w = pygame_game.Game(copy.deepcopy(gc),game_list[g],g+1,len(game_list),config_path,model)
-        w.log.write_random_seed(seeds[g])
-        # Play the game
-        #screens.pre_game(w)
-        w.game_loop()
-        #screens.post_game(w, total_bonus)
-        # Clean up
-        total_bonus = total_bonus + w.money
-        w.log.slog("bonus",{'total':"%d"%total_bonus})
-        w.log.close_session_log()
-    # End of session
-    w.display_bonus(max(0.0, total_bonus))
-    sys.exit()
+    gen_screens()
+    exp.run()

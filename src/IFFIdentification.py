@@ -51,7 +51,7 @@ class IFFIdentification():
             # Pressed IFF key too soon
             if not self.intervalflag and 0 < world.score.intrvl < int(world.config["intrvl_min"]) and self.timer.elapsed() >= int(world.config["intrvl_min"]):
                 world.log.add_event('IFFFeedback-too-soon')
-                world.sounds.beep_high.play()
+                world.play_sound('beep-high')
                 self.feedback_checking = False
             # Pressed IFF key in the interval window
             elif not self.intervalflag and world.mine.is_tagged():
@@ -60,7 +60,7 @@ class IFFIdentification():
             # Didn't press IFF key before interval timeout
             elif self.intervalflag and self.timer.elapsed() >= int(world.config["intrvl_max"]):
                 world.log.add_event('IFFFeedback-too-late')
-                world.sounds.beep_low.play()
+                world.play_sound('beep-low')
                 self.feedback_checking = False
         else:
             self.feedback_checking = False

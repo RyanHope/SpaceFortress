@@ -15,16 +15,12 @@ import score
 import IFFIdentification
 import log
 import lisp
-
-import time
+import key_state
 
 class Game(object):
-    def __init__(self,global_conf,game_name,game_number,games_in_session,config_path,model):
+    def __init__(self, conf, game_name, game_number, model):
         # config
-        self.datapath = config.get_datapath(global_conf)
-        self.config_path = config_path
-        self.config = config.read_conf(config.get_game_config_file(game_name),
-                                       global_conf, self.config_path, ["#", "\n"])
+        self.config = conf
         # model
         self.model = model
         #
@@ -35,7 +31,6 @@ class Game(object):
         self.session_name = config.get_session_name(self.config)
         self.game_name = game_name
         self.game_number = game_number
-        self.games_in_session = games_in_session
         self.simulate = int(self.config["simulate"]) == 1
         self.image = int(self.config['image'])
         self.wind_magnitude = float(self.config["wind"][0])
@@ -54,8 +49,10 @@ class Game(object):
             self.fps *= self.config['speedup']
         # game objects
         self.cur_time = 0
+        self.cur_time_override = None
         self.shell_list = []
         self.missile_list = []
+        self.key_state = key_state.KeyState()
 
         self.bonus = bonus.Bonus(self,self.config)
         self.fortress = fortress.Fortress(self,self.config)
@@ -69,12 +66,24 @@ class Game(object):
         self.bonus.flag = True
         self.collisions = []
         # logging
-        self.log = log.log(self.config['id'],config.get_datapath(global_conf),self.session_name,game_number)
-        if self.simulate:
-            self.log.open_simulate_logs()
+        self.log = log.game_log(self.config['id'],config.get_datapath(self.config),self.session_name,self.game_number)
+        self.open_logs()
+
+    def press_key(self, key_id):
+        if key_id in self.key_state.keys:
+            self.log.add_event('hold-%s'%key_id)
+            self.key_state.keys[key_id] = True
+            self.key_state.events.append(key_state.Press(key_id))
         else:
-            self.log.open_gamelogs()
-        self.log.slog('setup',{'condition': self.condition_name, 'session': self.session_name, 'game': self.game_name})
+            raise Exception('unknown key "%s"'%key_id)
+
+    def release_key(self, key_id):
+        if key_id in self.key_state.keys:
+            self.log.add_event('release-%s'%key_id)
+            self.key_state.keys[key_id] = False
+            self.key_state.events.append(key_state.Release(key_id))
+        else:
+            raise Exception('unknown key "%s"'%key_id)
 
     def compute_wind(self):
         if self.wind_magnitude_noise>0:
@@ -89,6 +98,25 @@ class Game(object):
         direction = math.radians(self.wind_direction + dir_rand)
         return Vector2D(mag*math.cos(direction),mag*math.sin(direction))
 
+    def process_key_state(self):
+        self.ship.thrust_flag = True = self.key_state.keys['thrust']
+        for e in self.key_state.events:
+            if isinstance(e, key_state.Press):
+                if e.id in ['left', 'right']:
+                    self.ship.turn_flag = e.id
+                elif e.id == 'fire':
+                    self.fire_missile()
+                elif e.id == 'iff':
+                    self.IFFIdentification.keypress(self.log, self.score)
+                elif e.id == 'shots':
+                    if self.bonus.exists:
+                        self.bonus.check_for_match(bonus.BONUS_SHOTS)
+                elif e.id == 'pnts':
+                    if self.bonus.exists:
+                        self.bonus.check_for_match(bonus.BONUS_POINTS)
+            elif isinstance(e, key_state.Release):
+                if e.id in ['left', 'right'] and self.ship.turn_flag == e.id:
+                    self.ship.turn_flag = False
 
     def update_score(self):
         self.IFFIdentification.check_for_timeout(self.log,self.score)
@@ -166,7 +194,6 @@ class Game(object):
             if self.mine.next_wake_up >= 0 and self.mine.timer.elapsed() > self.mine.next_wake_up:
                 self.mine.spawn()
                 self.log.add_event('spawn-%s'%self.mine.type())
-                self.log.slog('spawn-%s'%self.mine.type())
 
 
     def update_shells(self):
@@ -183,7 +210,19 @@ class Game(object):
                     self.ship.take_damage()
                     if not self.ship.alive:
                         self.log.add_event('ship-destroyed')
-    
+
+    def fire_missile(self):
+        if (self.mine.exists or self.fortress.exists) and not self.ship.firing_disabled:
+            self.log.add_event('missile-fired')
+            self.missile_list.append(missile.Missile(self))
+            self.play_sound('missile-fired')
+            if self.fortress.exists:
+                if self.score.shots > 0:
+                    self.score.shots -= 1
+                    self.score.penalize('pnts', 'missile_penalty')
+                else:
+                    self.score.penalize('pnts', 'missile_debt_penalty')
+
     def update_missiles(self):
         for i, missile in enumerate(self.missile_list):      #move any missiles, delete if offscreen
             missile.compute()
@@ -235,15 +274,13 @@ class Game(object):
                         self.fortress.alive = False
                         self.score.reward('pnts', 'destroy_fortress')
                         self.score.vlner = 0
-                        if self.sounds_enabled:
-                            self.sounds.explosion.play()
+                        self.play_sound('explosion')
                         self.ship.alive = True
                         self.fortress.deathtimer.reset()
                     if self.fortress.vulnerabilitytimer.elapsed() < int(self.config["vlner_time"]) and self.score.vlner < (int(self.config["vlner_threshold"]) + 1):
                         self.log.add_event('vlner-reset')
                         self.score.vlner = 0
-                        if self.sounds_enabled:
-                            self.sounds.vlner_reset.play()
+                        self.play_sound('vlner-reset')
                     self.fortress.vulnerabilitytimer.reset()
 
     def update_bonus(self):
@@ -253,6 +290,7 @@ class Game(object):
     def update_world(self):
         """chief function to update the world"""
         self.collisions = []
+        self.process_key_state()
         self.update_score()
         self.update_ship()
         self.update_fortress()
@@ -268,7 +306,10 @@ class Game(object):
         system_clock game_time ship_alive? ship_x ship_y ship_vel_x ship_vel_y ship_orientation mine_alive? mine_x mine_y 
         fortress_alive? fortress_orientation [missile_x missile_y missile_orientation ...] [shell_x shell_y shell_orientation ...] bonus_symbol
         pnts cntrl vlcty vlner iff intervl speed shots thrust_key left_key right_key fire_key iff_key shots_key pnts_key"""
-        game_time = self.cur_time
+        if self.cur_time_override != None:
+            game_time = self.cur_time_override
+        else:
+            game_time = self.cur_time
         if self.ship.alive:
             ship_alive = "y"
             ship_x = "%.3f"%(self.ship.position.x)
@@ -309,14 +350,14 @@ class Game(object):
             bonus = self.bonus.text
         else:
             bonus = "-"
-        keys = self.keys_pressed#pygame.key.get_pressed()
-        thrust_key = "y" if keys[self.thrust_key] else "n"
-        left_key   = "y" if keys[self.left_turn_key] else "n"
-        right_key  = "y" if keys[self.right_turn_key] else "n"
-        fire_key   = "y" if keys[self.fire_key] else "n"
-        iff_key    = "y" if keys[self.IFF_key] else "n"
-        shots_key  = "y" if keys[self.shots_key] else "n"
-        pnts_key   = "y" if keys[self.pnts_key] else "n"
+        #keys = self.keys_pressed#pygame.key.get_pressed()
+        thrust_key = "y" if self.key_state.keys['thrust'] else "n"
+        left_key   = "y" if self.key_state.keys['left'] else "n"
+        right_key  = "y" if self.key_state.keys['right'] else "n"
+        fire_key   = "y" if self.key_state.keys['fire'] else "n"
+        iff_key    = "y" if self.key_state.keys['iff'] else "n"
+        shots_key  = "y" if self.key_state.keys['shots'] else "n"
+        pnts_key   = "y" if self.key_state.keys['pnts'] else "n"
         if self.score.iff == '':
             iff = '-'
         else:
@@ -337,19 +378,19 @@ class Game(object):
                            'vx': s.velocity.x, 'vy': s.velocity.y,
                            'orientation': s.orientation})
         keys = []
-        if self.keys_pressed[self.thrust_key]:
+        if self.key_state.keys['thrust']:
             keys.append(lisp.symbol('thrust'))
-        if self.keys_pressed[self.left_turn_key]:
+        if self.key_state.keys['left']:
             keys.append(lisp.symbol('left'))
-        if self.keys_pressed[self.right_turn_key]:
+        if self.key_state.keys['right']:
             keys.append(lisp.symbol('right'))
-        if self.keys_pressed[self.fire_key]:
+        if self.key_state.keys['fire']:
             keys.append(lisp.symbol('fire'))
-        if self.keys_pressed[self.IFF_key]:
+        if self.key_state.keys['iff']:
             keys.append(lisp.symbol('iff'))
-        if self.keys_pressed[self.shots_key]:
+        if self.key_state.keys['shots']:
             keys.append(lisp.symbol('shots'))
-        if self.keys_pressed[self.pnts_key]:
+        if self.key_state.keys['pnts']:
             keys.append(lisp.symbol('pnts'))
 
         return {'screen-type': screen_type,
@@ -378,12 +419,53 @@ class Game(object):
                 'keys': keys,
                 'collisions': map(lisp.symbol, self.collisions)}
 
+    def get_total_score(self):
+        total = 0
+        if 'pnts' in self.config['active_scores']:
+            total += self.score.pnts
+        if 'cntrl' in self.config['active_scores']:
+            total += self.score.cntrl
+        if 'vlcty' in self.config['active_scores']:
+            total += self.score.vlcty
+        if 'speed' in self.config['active_scores']:
+            total += self.score.speed
+        if 'crew' in self.config['active_scores']:
+            total += self.score.crew_members * int(self.config['crew_member_points'])
+        return total
+
+    def calculate_reward(self):
+        total = self.get_total_score()
+        b = int(self.config['bonus_per_game'])
+        p = int(self.config['bonus_max_points_per_game'])
+        # round to the nearest integer to give the poor students a break.
+        self.money = min(b, max(0, int(round(total / float(p) * b))));
+
+    def format_money(self, amount=None):
+        if amount == None:
+            amount = self.money
+        return "%d.%02d"%(amount/100,amount%100)
+
+    def log_score(self):
+        total = self.get_total_score()
+        if 'pnts' in self.config['active_scores']:
+            self.log.glog("pnts score %d"%self.score.pnts)
+        if 'cntrl' in self.config['active_scores']:
+            self.log.glog("cntrl score %d"%self.score.cntrl)
+        if 'vlcty' in self.config['active_scores']:
+            self.log.glog("vlcty score %d"%self.score.vlcty)
+        if 'speed' in self.config['active_scores']:
+            self.log.glog("speed score %d"%self.score.speed)
+        if 'crew' in self.config['active_scores']:
+            self.log.glog("crew score %d"%(self.score.crew_members*int(self.config['crew_member_points'])))
+        self.log.glog("total score %d"%total)
+        self.log.glog("raw pnts %d"%self.score.raw_pnts)
+        self.log.glog("bonus earned $%s"%self.format_money())
+
     def reset_position(self):
         """pauses the game and resets"""
         self.set_objects(self.get_world_state_for_model('game'))
         if not self.simulate:
-            if self.sounds_enabled:
-                self.sounds.explosion.play()
+            self.play_sound('explosion')
             if self.image:
                 self.wait_and_eat_carets(1000)
             else:
@@ -424,11 +506,7 @@ class Game(object):
     def step_one_tick(self):
         prev_time = self.cur_time
         self.cur_time = self.gameTimer.elapsed()
-        if self.simulate:
-            cur_rtime = 0.0
-        else:
-            cur_rtime = time.time()
-        times = (self.cur_time, cur_rtime)
+        times = (self.cur_time, self.now())
         self.tinc = self.cur_time - prev_time
         # Process Input
         self.set_objects(self.get_world_state_for_model('game'))
@@ -456,13 +534,11 @@ class Game(object):
             self.destroyed = True
 
     def start(self):
-        self.log.slog('begin')
         self.gameTimer = Timer()
         self.destroyed = False
 
     def finish(self):
-        self.log.slog('end-game',{})
-        w.calculate_reward()
-        w.log_score()
-        w.log.close_gamelogs()
-        w.log.rename_logs_completed()
+        self.calculate_reward()
+        self.log_score()
+        self.log.close_gamelogs()
+        self.log.rename_logs_completed()

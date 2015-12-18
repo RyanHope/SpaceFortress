@@ -4,16 +4,38 @@ import time
 import pygame
 import codecs
 
-class log():
-    def __init__(self,id,datapath,session_name,game_num):
-        self.version = "1.5"
+class base(object):
+    def __init__(self, id, datapath, session_name):
         self.id = id
         self.session = "1" if session_name == None else session_name
-        self.game = game_num
-        self.events = []
         self.datapath = datapath + "/%s/"%self.id
         if not os.path.exists(self.datapath):
             os.mkdir(self.datapath)
+
+class session_log(base):
+    def __init__(self, id, datapath, session_name):
+        super(self.__class__, self).__init__(id, datapath, session_name)
+        self.game = 0
+
+    def open_slog(self):
+        self.sessionlog = open(os.path.join(self.datapath, '%s-%s.dat'%(self.id,self.session)),'a')
+
+    def close_slog(self):
+        self.sessionlog.close()
+
+    def slog(self,string,args={}):
+        """Write a string to the session-wide log file with optional key/value pairs."""
+        acc = []
+        for k,v in args.iteritems():
+            acc.append("%s=%s"%(k,str(v).replace(' ','\ ')))
+        self.sessionlog.write("%f %d %s %s\n"%(time.time(),self.game,string, " ".join(acc)))
+
+class game_log(base):
+    def __init__(self,id,datapath,session_name,game_num):
+        super(self.__class__, self).__init__(id, datapath, session_name)
+        self.version = "1.5"
+        self.game = game_num
+        self.events = []
 
     def write_gamelog_header(self):
 	self.gamelog.write("# log version %s\n"%self.version)
@@ -39,7 +61,6 @@ pnts cntrl vlcty vlner iff intervl speed shots thrust_key left_key right_key fir
             sys.exit()
 
     def open_gamelogs(self):
-        self.sessionlog = open(os.path.join(self.datapath, '%s-%s.dat'%(self.id,self.session)),'a')
         tempname = os.path.join(self.datapath,"incomplete-%s-%s-%d.dat"%(self.id, self.session, self.game))
         #print tempname
         keyfile = tempname[:-3]+"key"
@@ -55,16 +76,6 @@ pnts cntrl vlcty vlner iff intervl speed shots thrust_key left_key right_key fir
         self.keylog.close()
         if hasattr(self,'simulate_key_stream'):
             self.simulate_key_stream.close()
-
-    def close_session_log(self):
-        self.sessionlog.close()
-
-    def slog(self,string,args={}):
-        """Write a string to the session-wide log file with optional key/value pairs."""
-        acc = []
-        for k,v in args.iteritems():
-            acc.append("%s=%s"%(k,str(v).replace(' ','\ ')))
-        self.sessionlog.write("%f %d %s %s\n"%(time.time(),self.game,string, " ".join(acc)))
 
     def session_comment(self,string):
         """Add a comment to the session file."""

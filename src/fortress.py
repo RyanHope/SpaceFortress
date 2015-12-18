@@ -56,6 +56,5 @@ class Fortress(obj.Object):
             self.timer.reset()
 
     def fire(self, ship):
-        if self.app.sounds_enabled:
-            self.app.sounds.shell_fired.play()
+        self.app.play_sound('shell-fired')
         self.app.shell_list.append(shell.Shell(self.app, self.to_target_orientation(ship)))
