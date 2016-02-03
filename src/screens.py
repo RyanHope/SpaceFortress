@@ -56,8 +56,8 @@ class message(object):
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         sys.exit()
-                elif not event.key in self.modifiers():
-                    return
+                    elif not event.key in self.modifiers():
+                        return
             pygame.time.delay(1)
 
     def continue_text(self, verb='continue'):
