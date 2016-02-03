@@ -92,21 +92,21 @@ class total_score(message):
 
     def draw(self):
         """shows score for last game and waits to continue"""
-        total = game.get_total_score()
+        total = self.game.get_total_score()
         self.screen.fill((0, 0, 0))
-        if self.sname == None:
-            title = "Game %d of %s"%(self.gnum, self.gmax)
+        if self.game.session_name == None:
+            title = "Game %d of %s"%(self.game.game_number, self.gmax)
         else:
-            title = "Session %s, Game %d of %s"%(self.sname, self.gnum, self.gmax)
+            title = "Session %s, Game %d of %s"%(self.sname, self.game.game_number, self.gmax)
         drawing.blit_text(self.screen,self.f24,title,y=100,valign='top',halign='center')
         drawing.blit_text(self.screen,self.f36,"You scored %d points."%self.game.get_total_score(),y=320,valign='top',halign='center')
         drawing.blit_text(self.screen,self.f36,"You earned a bonus of $%s this game."%format_money(self.game.money),y=370,valign='top',halign='center')
-        drawing.blit_text(self.screen,self.f36,"So far you have earned a total of $%s."%format_money(exp.bonus),y=420,valign='top',halign='center')
+        drawing.blit_text(self.screen,self.f36,"So far you have earned a total of $%s."%format_money(experiment.exp.bonus),y=420,valign='top',halign='center')
         self.continue_text(self.ctext).draw(self.screen,700,False)
         pygame.display.flip()
 
     def start(self):
-        score = {'total': self.game.get_total_score(), 'bonus': self.game.money, 'total-bonus': self.total_bonus, 'raw-pnts': self.game.score.raw_pnts}
+        score = {'total': self.game.get_total_score(), 'bonus': self.game.money, 'total-bonus': experiment.exp.bonus, 'raw-pnts': self.game.score.raw_pnts}
         experiment.exp.log.slog('show-total-score', score)
 
     def end(self):
@@ -202,16 +202,16 @@ class bonus(message):
         super(bonus, self).__init__(False)
 
     def draw(self):
-        drawing.fullscreen_message(self.screen,[drawing.text("You earned a $%s bonus!"%format_money(exp.bonus),self.f36,(255,255,0))],
+        drawing.fullscreen_message(self.screen,[drawing.text("You earned a $%s bonus!"%format_money(experiment.exp.bonus),self.f36,(255,255,0))],
                                    drawing.text("",self.f24))
         pygame.display.flip()
 
     def handle_events(self):
         pygame.event.clear()
         while True:
-            for event in pygame.event.wait():
-                if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
-                    sys.exit()
+            event = pygame.event.wait()
+            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+                sys.exit()
 
 def display_screen(game,screen,continue_text,delay=False,total_bonus=None):
     if screen == 'progress':
