@@ -167,6 +167,10 @@ class SDLGame(game.Game):
         b.append(keys)
         self.log.write_keys(b)
 
+    def finish(self):
+        super(self.__class__, self).finish()
+        exp.bonus += self.money
+
     def run(self):
         exp.log.slog('setup',{'condition': self.condition_name, 'session': self.session_name, 'game': self.game_name})
         exp.log.slog('begin')
