@@ -134,12 +134,12 @@ class Game(object):
     def update_ship(self):
         self.ship.compute(self.fortress)                                  #move ship
         if self.smallhex.collide(self.ship):
+            self.collisions.append('small-hex')
             if int(self.config["explode_smallhex"]) == 1:
                 self.ship.alive = False
                 self.log.add_event('explode-smallhex')
             elif self.ship.small_hex_flag == False: #if ship hits small hex, bounce it back and subtract 5 points
                 self.log.add_event('hit-small-hex')
-                self.collisions.append('small-hex')
                 self.ship.small_hex_flag = True
                 self.ship.velocity.x = -self.ship.velocity.x
                 self.ship.velocity.y = -self.ship.velocity.y
@@ -153,6 +153,7 @@ class Game(object):
             self.ship.small_hex_flag = False
         if not self.bighex.collide(self.ship):
             if int(self.config["explode_bighex"]) == 1:
+                self.collisions.append('big-hex')
                 self.ship.alive = False
                 self.log.add_event('explode-bighex')
 
