@@ -1,4 +1,3 @@
-import pygame
 import timer
 
 class Score(object):

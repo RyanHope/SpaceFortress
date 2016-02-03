@@ -3,11 +3,9 @@ import math
 import random
 import os
 import sys
-import pygame
 import copy
 import re
 import argparse
-from dialog import read_string, read_int, read_from_list
 
 def read_conf(conf_file,config={},config_path='config',ignore=["#", "\n","\r","\t"]):
     configfile = open(os.path.join(config_path, conf_file))
@@ -221,52 +219,6 @@ def get_resume_info(gc,config_path):
             raise all_sessions_completed(subject_id)
     else:
             raise no_resume_info(subject_id)
-
-def prompt_for_missing_keys(gc,config_path):
-    '''The experiment requires an ID, condition, and session. Prompt
-    for them if they don''t exist in the config file.'''
-    screen = pygame.display.get_surface()
-    font = pygame.font.Font("fonts/freesansbold.ttf", 32)
-
-    if not gc.has_key('id'):
-	gc['id'] = read_string("Enter user id:", screen, font)
-    if not gc.has_key('condition'):
-        if gc.has_key('conditions'):
-            gc['condition'] = read_from_list("Choose the condition:", screen, font,gc['conditions'])
-    if not gc.has_key('session'):
-        if gc.has_key('sessions'):
-            try:
-                (resume_session,resume_game) = get_resume_info(gc,config_path)
-            except all_sessions_completed:
-                if read_from_list("This subject has completed all sessions!",screen,font,['Pick a session anyway','Quit']) == 1:
-                    sys.exit()
-                resume_session = False
-                resume_game = False
-            pick_session = True
-            if resume_session:
-                idx = gc['sessions'].index(resume_session)
-                if idx > 0 or resume_game > 1:
-                    pick_session = read_from_list("Resume subject on game %s of session %s?"%(resume_game,resume_session),
-                                                  screen,font,['Resume', 'Pick the session'])
-            if pick_session:
-                gc['session'] = gc['sessions'][read_from_list("Choose the session:", screen, font,gc['sessions'])]
-            else:
-                gc['session'] = resume_session
-                gc['game'] = resume_game
-
-def prompt_for_simulation_keys(gc):
-    '''Simulation mode expects some extra keys to be present. prompt if missing.'''
-    if int(gc['simulate']):
-        screen = pygame.display.get_surface()
-        font = pygame.font.Font("fonts/freesansbold.ttf", 32)
-        if gc.has_key('game'):
-            gc['game'] = int(gc['game'])
-        else:
-            gc['game'] = read_int('Enter starting game number: ',screen,font)
-        if gc.has_key('speedup'):
-            gc['speedup'] = float(gc['speedup'])
-        else:
-            gc['speedup'] = read_int('Enter speedup value: ',screen,font)
 
 def load_session_and_condition(gc,config_path,session=False,condition=False):
     (session_file, condition_file) = get_config_files(gc,session,condition)

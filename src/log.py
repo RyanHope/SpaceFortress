@@ -1,7 +1,6 @@
 import os
 import sys
 import time
-import pygame
 import codecs
 
 class base(object):
@@ -81,11 +80,8 @@ pnts cntrl vlcty vlner iff intervl speed shots thrust_key left_key right_key fir
         """Add a comment to the session file."""
         self.sessionlog.write("# %s\n" % string)
 
-    def glog(self,string,rectime=False):
-        if rectime:
-            self.gamelog.write("# %f %d %s\n"%(time.time(),pygame.time.get_ticks(),string))
-        else:
-            self.gamelog.write("# %s\n"%string)
+    def glog(self,string):
+        self.gamelog.write("# %s\n"%string)
 
     def add_event(self,event_id):
         self.events.append(event_id)

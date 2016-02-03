@@ -61,7 +61,7 @@ class SDLGame(game.Game):
         self.vector_explosion = Assets.vector_explosion
         self.vector_explosion_rect = self.vector_explosion.get_rect()
 
-    def open_log(self):
+    def open_logs(self):
         self.log.open_gamelogs()
 
     def delay(self, ms):

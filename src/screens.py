@@ -1,5 +1,6 @@
 from __future__ import division
 import pygame
+import sys
 import drawing
 import experiment
 

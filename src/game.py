@@ -500,8 +500,7 @@ class Game(object):
         self.fortress.timer.tick(mspf)
 
     def set_objects(self,objects):
-        if self.model:
-            model.objects = copy.copy(objects)
+        pass
 
     def step_one_tick(self):
         prev_time = self.cur_time

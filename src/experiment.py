@@ -1,6 +1,7 @@
 import pygame
 import config
 import random
+from dialog import read_string, read_int, read_from_list
 
 import log
 import assets
@@ -15,8 +16,7 @@ class Experiment(object):
 
         self.setup_video(int(self.gc['fullscreen']) == 1, int(self.gc['model']) == 0 or int(self.gc['display_level'])>0)
         if int(self.gc['display_level']) > 0:
-            config.prompt_for_missing_keys(self.gc, self.config_path)
-            config.prompt_for_simulation_keys(self.gc)
+            self.prompt_for_missing_keys()
         config.load_session_and_condition(self.gc, self.config_path)
 
         # Generate seeds for session
@@ -40,6 +40,52 @@ class Experiment(object):
             pygame.display.set_icon(pygame.image.load("gfx/psficon.png").convert_alpha())
             pygame.mouse.set_visible(False)
         assets.Assets.load()
+
+    def prompt_for_missing_keys(self):
+        '''The experiment requires an ID, condition, and session. Prompt
+        for them if they don''t exist in the config file.'''
+        screen = pygame.display.get_surface()
+        font = pygame.font.Font("fonts/freesansbold.ttf", 32)
+
+        if not self.gc.has_key('id'):
+            self.gc['id'] = read_string("Enter user id:", screen, font)
+        if not self.gc.has_key('condition'):
+            if self.gc.has_key('conditions'):
+                self.gc['condition'] = read_from_list("Choose the condition:", screen, font,self.gc['conditions'])
+        if not self.gc.has_key('session'):
+            if self.gc.has_key('sessions'):
+                try:
+                    (resume_session,resume_game) = config.get_resume_info(self.gc, self.config_path)
+                except all_sessions_completed:
+                    if read_from_list("This subject has completed all sessions!",screen,font,['Pick a session anyway','Quit']) == 1:
+                        sys.exit()
+                    resume_session = False
+                    resume_game = False
+                pick_session = True
+                if resume_session:
+                    idx = self.gc['sessions'].index(resume_session)
+                    if idx > 0 or resume_game > 1:
+                        pick_session = read_from_list("Resume subject on game %s of session %s?"%(resume_game,resume_session),
+                                                      screen,font,['Resume', 'Pick the session'])
+                if pick_session:
+                    self.gc['session'] = self.gc['sessions'][read_from_list("Choose the session:", screen, font,self.gc['sessions'])]
+                else:
+                    self.gc['session'] = resume_session
+                    self.gc['game'] = resume_game
+
+    # def prompt_for_simulation_keys(gc):
+    #     '''Simulation mode expects some extra keys to be present. prompt if missing.'''
+    #     if int(gc['simulate']):
+    #         screen = pygame.display.get_surface()
+    #         font = pygame.font.Font("fonts/freesansbold.ttf", 32)
+    #         if gc.has_key('game'):
+    #             gc['game'] = int(gc['game'])
+    #         else:
+    #             gc['game'] = read_int('Enter starting game number: ',screen,font)
+    #         if gc.has_key('speedup'):
+    #             gc['speedup'] = float(gc['speedup'])
+    #         else:
+    #             gc['speedup'] = read_int('Enter speedup value: ',screen,font)
 
     def format_money(self, amount=None):
         if amount == None:

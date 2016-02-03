@@ -3,15 +3,17 @@ import os
 
 class Sounds(object):
     """collection of game sounds"""
-    def __init__(self):
-        super(Sounds, self).__init__()
-        self.sounds = {}
+    # cache the sounds for all instances
+    sounds = None
+
+    def load_sounds(self):
+        Sounds.sounds = {}
         for root, dirs, files in os.walk("sounds/"):
             for f in files:
                 (head, tail) = os.path.split(f)
                 (name, ext) = os.path.splitext(tail)
                 if ext == '.wav':
-                    self.sounds[name] = pygame.mixer.Sound(f)
+                    self.sounds[name] = pygame.mixer.Sound(os.path.join(root, f))
         # self.shell_fired = pygame.mixer.Sound("sounds/ShellFired.wav")
         # self.missile_fired = pygame.mixer.Sound("sounds/MissileFired.wav")
         # self.explosion = pygame.mixer.Sound("sounds/ExpFort.wav")
@@ -22,8 +24,14 @@ class Sounds(object):
         # self.warn_high = pygame.mixer.Sound("sounds/warn-high.wav")
         # self.warn_low = pygame.mixer.Sound("sounds/warn-low.wav")
 
-    def play(sound_id):
-        if sound_id in self.sounds:
-            self.sounds[sound_id].play()
+    def __init__(self):
+        super(self.__class__, self).__init__()
+        if Sounds.sounds == None:
+            self.load_sounds()
+        # self.sounds = Sounds.sounds
+
+    def play(self, sound_id):
+        if sound_id in Sounds.sounds:
+            Sounds.sounds[sound_id].play()
         else:
             raise Exception('Unable to play sound "%s"'%sound_id)
