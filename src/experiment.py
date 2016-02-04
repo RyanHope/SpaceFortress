@@ -5,6 +5,7 @@ from dialog import read_string, read_int, read_from_list
 
 import log
 import assets
+import sounds
 
 class Experiment(object):
     def __init__(self):
@@ -40,6 +41,7 @@ class Experiment(object):
             pygame.display.set_icon(pygame.image.load("gfx/psficon.png").convert_alpha())
             pygame.mouse.set_visible(False)
         assets.Assets.load()
+        sounds.Sounds.load()
 
     def prompt_for_missing_keys(self):
         '''The experiment requires an ID, condition, and session. Prompt

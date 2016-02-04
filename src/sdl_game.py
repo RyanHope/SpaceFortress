@@ -47,9 +47,6 @@ class SDLGame(game.Game):
         self.scorerect.centerx = self.SCREEN_WIDTH/2
         #
         self.clock = pygame.time.Clock()
-        #
-        if self.sounds_enabled:
-            self.sounds = sounds.Sounds()
 
     def load_display_assets (self):
         self.screen = pygame.display.get_surface()
@@ -72,7 +69,7 @@ class SDLGame(game.Game):
 
     def play_sound(self, sound_id):
         if self.sounds_enabled:
-            self.sounds.play(sound_id)
+            sounds.Sounds.play(sound_id)
 
     def draw_world(self):
         self.screen.fill((0,0,0))
