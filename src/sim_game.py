@@ -5,7 +5,7 @@ import game
 
 class SimGame(game.Game):
     def __init__(self,conf, game_name, game_number):
-        super(self.__class__, self).__init__(conf, game_name, game_number, None)
+        super(self.__class__, self).__init__(conf, game_name, game_number)
         # FIXME: hard code the standard key bindings because we don't
         # want to depend on pygame.
         self.key_bindings = {119: 'thrust',

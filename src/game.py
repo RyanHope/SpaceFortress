@@ -18,11 +18,9 @@ import lisp
 import key_state
 
 class Game(object):
-    def __init__(self, conf, game_name, game_number, model):
+    def __init__(self, conf, game_name, game_number):
         # config
         self.config = conf
-        # model
-        self.model = model
         #
         self.WORLD_WIDTH = 710
         self.WORLD_HEIGHT = 626

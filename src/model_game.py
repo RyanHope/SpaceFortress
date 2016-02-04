@@ -4,7 +4,7 @@ import game
 
 class ModelGame(game.Game):
     def __init__(self, conf, game_name, game_number, channel):
-        super(self.__class__, self).__init__(conf, game_name, game_number, None)
+        super(self.__class__, self).__init__(conf, game_name, game_number)
         self.channel = channel
         self.commands = []
         self.quit = False

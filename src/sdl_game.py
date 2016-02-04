@@ -15,7 +15,7 @@ import pygame_objects as pyobj
 
 class SDLGame(game.Game):
     def __init__(self, conf, game_name, game_number):
-        super(self.__class__, self).__init__(conf, game_name, game_number, None)
+        super(self.__class__, self).__init__(conf, game_name, game_number)
         # input
         self.key_bindings = {eval("pygame.K_%s"%self.config["thrust_key"]): 'thrust',
                              eval("pygame.K_%s"%self.config["left_turn_key"]): 'left',
@@ -113,13 +113,7 @@ class SDLGame(game.Game):
         pygame.display.flip()
 
     def get_event(self):
-        if self.model:
-            if self.model.display_level > 0:
-                # tell pygame to handle system events
-                pygame.event.pump()
-            return self.model.get_event(self)
-        else:
-            return pygame.event.get()
+        return pygame.event.get()
 
     def is_caret_key(self,event):
         return event.key == pygame.K_CARET or (event.key == pygame.K_6 and
