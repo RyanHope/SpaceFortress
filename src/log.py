@@ -58,8 +58,9 @@ pnts cntrl vlcty vlner iff intervl speed shots thrust_key left_key right_key fir
         else:
             print('Error: Could not find key file: ' + simfile + '\n');
             sys.exit()
+        self.config_filename = "unused"
 
-    def open_gamelogs(self):
+    def open_gamelogs(self, config):
         tempname = os.path.join(self.datapath,"incomplete-%s-%s-%d.dat"%(self.id, self.session, self.game))
         #print tempname
         keyfile = tempname[:-3]+"key"
@@ -68,6 +69,7 @@ pnts cntrl vlcty vlner iff intervl speed shots thrust_key left_key right_key fir
         self.eventlog = open(evtfile,'w')
         self.keylog = open(keyfile, 'w')
         self.write_gamelog_header()
+        self.record_config(config)
 
     def close_gamelogs(self):
         self.gamelog.close()
@@ -75,6 +77,12 @@ pnts cntrl vlcty vlner iff intervl speed shots thrust_key left_key right_key fir
         self.keylog.close()
         if hasattr(self,'simulate_key_stream'):
             self.simulate_key_stream.close()
+
+    def record_config(self, config):
+        self.config_filename = os.path.join(self.datapath, "incomplete-%s-%s-%d.config.txt"%(self.id,self.session,self.game))
+        with codecs.open(self.config_filename, "w", 'utf-8') as out:
+            for k,v in (sorted(config.items())):
+                out.write('%s %s\n'%(k,v))
 
     def session_comment(self,string):
         """Add a comment to the session file."""
@@ -105,7 +113,7 @@ pnts cntrl vlcty vlner iff intervl speed shots thrust_key left_key right_key fir
     def rename_logs_completed(self):
         '''When the game is done, remove the incomplete text from the
         log files.'''
-        for f in [self.gamelog.name, self.eventlog.name, self.keylog.name]:
+        for f in [self.gamelog.name, self.eventlog.name, self.keylog.name, self.config_filename]:
             (dir,name) = os.path.split(f)
             if name.startswith('incomplete-'):
                 new = os.path.join(dir,name[11:])

@@ -21,7 +21,7 @@ class ModelGame(game.Game):
                              '108': 'pnts'}
 
     def open_logs(self):
-        self.log.open_gamelogs()
+        self.log.open_gamelogs(self.config)
 
     def delay(self, ms):
         self.gameTimer.tick(ms)

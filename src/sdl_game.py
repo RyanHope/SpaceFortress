@@ -59,7 +59,7 @@ class SDLGame(game.Game):
         self.vector_explosion_rect = self.vector_explosion.get_rect()
 
     def open_logs(self):
-        self.log.open_gamelogs()
+        self.log.open_gamelogs(self.config)
 
     def delay(self, ms):
         pygame.time.delay(ms)
