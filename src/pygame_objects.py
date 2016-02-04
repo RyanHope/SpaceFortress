@@ -74,8 +74,8 @@ def draw_ship(ship, worldsurf):
     #NewX = (OldX*Cos(Theta)) - (OldY*Sin(Theta))
     #NewY = -((OldY*Cos(Theta)) + (OldX*Sin(Theta))) - taking inverse because +y is down
     #these formulae rotate about the origin. Need to translate to origin, rotate, and translate back
-    if ship.auto_thrust_debug:
-        ship.draw_autothrust(worldsurf)
+    # if ship.auto_thrust_debug:
+    #     ship.draw_autothrust(worldsurf)
 
     ship.sinphi = math.sin(math.radians((ship.orientation) % 360))
     ship.cosphi = math.cos(math.radians((ship.orientation) % 360))
@@ -99,19 +99,19 @@ def draw_ship(ship, worldsurf):
     pygame.draw.line(worldsurf, (255,255,0), (x3,y3), (x4,y4))
     pygame.draw.line(worldsurf, (255,255,0), (x3,y3), (x5,y5))
 
-    if ship.thrust_flag:
-        thrust = [[[-20,0], [-29,0]],
-                  [[-20,0], [-29,5]],
-                  [[-20,0], [-29,-5]]]
-        # if random.uniform(0,100)<75:
-        #     c = (255,0,0)
-        # else:
-        #     c = (255,200,0)
-        c = (255,0,0)
-        for l in thrust:
-            pygame.draw.line(worldsurf, c,
-                             rotate(ship, l[0][0], l[0][1]),
-                             rotate(ship, l[1][0], l[1][1]))
+    # if ship.thrust_flag:
+    #     thrust = [[[-20,0], [-29,0]],
+    #               [[-20,0], [-29,5]],
+    #               [[-20,0], [-29,-5]]]
+    #     # if random.uniform(0,100)<75:
+    #     #     c = (255,0,0)
+    #     # else:
+    #     #     c = (255,200,0)
+    #     c = (255,0,0)
+    #     for l in thrust:
+    #         pygame.draw.line(worldsurf, c,
+    #                          rotate(ship, l[0][0], l[0][1]),
+    #                          rotate(ship, l[1][0], l[1][1]))
 
 def old_draw_autothrust (ship, worldsurf):
     tmp = ship.detect_thrustable_conditions()
