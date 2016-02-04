@@ -10,13 +10,16 @@ class Ship(obj.Object):
         super(Ship, self).__init__()
         self.app = app
         self.collision_radius = 10
-        self.position.x = 245
-        self.position.y = 315
-        self.orientation = 90
         self.start_position.x = 245
         self.start_position.y = 315
-        self.velocity.x = float(config['ship_start_velocity'][0])
-        self.velocity.y = float(config['ship_start_velocity'][1])
+        self.start_velocity.x = float(config['ship_start_velocity'][0])
+        self.start_velocity.y = float(config['ship_start_velocity'][1])
+        self.start_orientation = int(config['ship_start_orientation'])
+        self.position.x = 245
+        self.position.y = 315
+        self.orientation = self.start_orientation
+        self.velocity.x = self.start_velocity.x
+        self.velocity.y = self.start_velocity.y
         self.missile_capacity = 100
         self.missile_count = 100
         self.active_missile_limit = 5
@@ -31,12 +34,6 @@ class Ship(obj.Object):
         self.fire_flag = False
         self.firing_disabled = False
         self.turn_speed = int(config["ship_turn_speed"])
-        self.auto_turn = int(config['ship_auto_turn'])
-        self.auto_thrust = int(config['ship_auto_thrust'])
-        self.auto_thrust_min_radius = 45
-        self.auto_thrust_max_radius = 70
-        self.auto_thrust_debug = int(config['auto_thrust_debug'])
-        self.auto_thrust_outside_threshold = False
         self.acceleration = 0
         self.acceleration_factor = float(config["ship_acceleration"])
         self.acceleration_noise = float(config["ship_acceleration_noise"])
@@ -57,6 +54,16 @@ class Ship(obj.Object):
         self.wrap_penalty_score = config['wrap_score']
         if not self.wrap_penalty_score in ('cntrl','pnts'):
             raise Exception("wrap penalty must be taken from cntrl or pnts. Invalid score id: %s"%self.wrap_penalty_score)
+        if config["ship_motivator"] == 'standard':
+            self.motivator = StandardMotivator(self, config)
+        elif config["ship_motivator"] == 'autoturn':
+            self.motivator = AutoTurn(self, config)
+        elif config["ship_motivator"] == 'discrete':
+            self.motivator = Discrete(self, config)
+        elif config["ship_motivator"] == 'autothrust':
+            self.motivator = AutoThrust(self, config)
+        else:
+            raise Exception ('Unknown motivator: %s'%config["ship_motivator"])
 
     def angle_to_object(self,object):
 	"""compute angle from direction to ship"""
@@ -88,25 +95,191 @@ class Ship(obj.Object):
         else:
             return None
 
-    def distance_to_fortress(self):
-        return (self.app.fortress.position-self.position).norm()
-    
-    def angle_to_fortress(self):
-        return math.degrees(((self.app.fortress.position.copy()-self.position)*Vector2D(1,-1)).angle())
+    def reset (self):
+        """The ship has been killed. reset all relevant slots."""
+        self.position.x = self.start_position.x
+        self.position.y = self.start_position.y
+        self.velocity.x = self.start_velocity.x
+        self.velocity.y = self.start_velocity.y
+        self.orientation = self.start_orientation
+        self.motivator.reset()
 
-    def angle_to_fortress2(self):
-        return math.degrees((self.app.fortress.position-self.position).angle())
+    def compute(self, fortress):
+        """updates ship"""
+        self.motivator.move()
 
-    def distance_between_angles(self, a1, a2):
-        a = (a1-a2)%360
-        if a > 180:
-            return 360-a
+class Motivator(object):
+    def __init__(self, ship, config):
+        # super(self.__class__, self).__init__()
+        self.ship = ship
+        self.turn_flag = False
+        self.thrust_flag = False
+
+    def reset(self):
+        self.thrust_flag = False
+        self.turn_flag = False
+
+    def handle_wrapping(self):
+	wrapped = False
+        if self.ship.position.x > self.ship.app.WORLD_WIDTH:
+            self.ship.position.x = 0
+            #self.ship.app.log.write("# wrapped right\n")
+	    wrapped = True
+        if self.ship.position.x < 0:
+            self.ship.position.x = self.ship.app.WORLD_WIDTH
+            #self.ship.app.log.write("# wrapped left\n")
+	    wrapped = True
+        if self.ship.position.y > self.ship.app.WORLD_HEIGHT:
+            self.ship.position.y = 0
+            #self.ship.app.log.write("# wrapped down\n")
+	    wrapped = True
+        if self.ship.position.y < 0:
+            self.ship.position.y = self.ship.app.WORLD_HEIGHT
+            #self.ship.app.log.write("# wrapped up\n")
+	    wrapped = True
+	if wrapped:
+	    self.ship.app.log.add_event('wrapped')
+            if self.ship.wrap_penalty_score == 'cntrl':
+                self.ship.app.score.penalize('cntrl', 'wrap_penalty')
+            elif self.ship.wrap_penalty_score  == 'pnts':
+                self.ship.app.score.penalize('pnts', 'wrap_penalty')
+
+    def do_turning(self):
+        if self.turn_flag == 'right':
+            self.ship.orientation = (self.ship.orientation - self.ship.turn_speed) % 360
+        elif self.turn_flag == 'left':
+            self.ship.orientation = (self.ship.orientation + self.ship.turn_speed) % 360
+
+    def do_thrusting(self):
+        if self.thrust_flag == True:
+            self.apply_acceleration()
         else:
-            return a
+            self.ship.acceleration = 0
 
-    def distance_from_two_angles(self, a, min_angle, max_angle):
-        return min(self.distance_between_angles(a, min_angle),
-                   self.distance_between_angles(a, max_angle))
+    def apply_acceleration(self):
+        self.ship.acceleration = self.ship.acceleration_factor
+        # it uses random so every time the player accelerates he
+        # changes the next random number, affecting the bonus and
+        # mines. This is annoying when the noise is 0 (turned off).
+        if self.ship.acceleration_noise > 0:
+            self.ship.acceleration_factor += random.uniform(-self.ship.acceleration_noise,self.ship.acceleration_noise)
+
+    def add_movement_vectors(self):
+        self.ship.velocity.x += self.ship.acceleration * math.cos(math.radians(self.ship.orientation))
+        if self.ship.velocity.x > self.ship.max_vel:
+            self.ship.velocity.x = self.ship.max_vel
+        elif self.ship.velocity.x < -self.ship.max_vel:
+            self.ship.velocity.x = -self.ship.max_vel
+        self.ship.velocity.y += self.ship.acceleration * math.sin(math.radians(self.ship.orientation))
+        if self.ship.velocity.y > self.ship.max_vel:
+            self.ship.velocity.y = self.ship.max_vel
+        elif self.ship.velocity.y < -self.ship.max_vel:
+            self.ship.velocity.y = -self.ship.max_vel
+        self.ship.position.x += self.ship.velocity.x
+        self.ship.position.y -= self.ship.velocity.y
+
+class StandardMotivator(Motivator):
+    def __init__(self, ship, config):
+        super(self.__class__, self).__init__(ship, config)
+
+    def press_key(self, key):
+        if key == 'thrust':
+            self.thrust_flag = True
+        elif key in ['left', 'right']:
+            self.turn_flag = key
+
+    def release_key(self, key):
+        if key == 'thrust':
+            self.thrust_flag = False
+        elif key in ['left', 'right'] and self.turn_flag == key:
+            self.turn_flag = False
+
+    def move (self):
+        self.do_turning()
+        self.do_thrusting()
+        self.add_movement_vectors()
+        self.handle_wrapping()
+
+class AutoTurn(Motivator):
+    def __init__(self, ship, config):
+        super(self.__class__, self).__init__(ship, config)
+
+    def press_key(self, key):
+        if key == 'thrust':
+            self.thrust_flag = True
+
+    def release_key(self, key):
+        if key == 'thrust':
+            self.thrust_flag = False
+
+    def angle_to_fortress(self):
+        return math.degrees(((self.ship.app.fortress.position.copy()-self.ship.position)*Vector2D(1,-1)).angle())
+
+    def move (self):
+        self.ship.orientation = int(self.angle_to_fortress())
+        self.do_thrusting()
+        self.add_movement_vectors()
+        self.handle_wrapping()
+
+class Discrete(Motivator):
+    def __init__(self, ship, config):
+        super(self.__class__, self).__init__(ship, config)
+        self.thrust_ticks = 0
+        self.turn_ticks = 0
+
+    def reset(self):
+        super(self.__class__, self).reset()
+        self.thrust_ticks = 0
+        self.turn_ticks = 0
+
+    def press_key(self, key):
+        if key == 'thrust':
+            self.thrust_ticks += 3
+        elif key in ['left', 'right']:
+            if self.turn_flag == key or self.turn_flag == False:
+                self.turn_ticks += 4
+            else:
+                self.turn_ticks = 4
+            self.turn_flag = key
+
+    def release_key(self, key):
+        pass
+
+    def move (self):
+        if self.thrust_ticks > 0:
+            self.thrust_ticks -= 1
+        if self.turn_ticks > 0:
+            self.turn_ticks -= 1
+        self.thrust_flag = self.thrust_ticks > 0
+        if self.turn_ticks <= 0:
+            self.turn_flag = False
+
+        self.do_turning()
+        self.do_thrusting()
+        self.add_movement_vectors()
+        self.handle_wrapping()
+
+class AutoThrust(Motivator):
+    def __init__(self, ship, config):
+        super(self.__class__, self).__init__(ship, config)
+        self.auto_thrust_min_radius = 45
+        self.auto_thrust_max_radius = 70
+        self.auto_thrust_outside_threshold = False
+        self.auto_thrust_debug = int(config['auto_thrust_debug'])
+
+    def press_key(self, key):
+        if key in ['left', 'right']:
+            self.turn_flag = key
+
+    def release_key(self, key):
+        if key in ['left', 'right'] and self.turn_flag == key:
+            self.turn_flag = False
+
+    def move (self):
+        self.do_turning()
+        self.thrust_flag = detect_thrustable_conditions()
+        self.add_movement_vectors()
+        self.handle_wrapping()
 
     def between_angles(self, a, angle1, angle2):
         angle1 %= 360
@@ -118,6 +291,23 @@ class Ship(obj.Object):
             return a >= angle2 or a <= angle1
         else:
             return a >= angle2 and a <= angle1
+
+    def distance_between_angles(self, a1, a2):
+        a = (a1-a2)%360
+        if a > 180:
+            return 360-a
+        else:
+            return a
+
+    def distance_to_fortress(self):
+        return (self.app.fortress.position-self.position).norm()
+
+    def angle_to_fortress2(self):
+        return math.degrees((self.app.fortress.position-self.position).angle())
+
+    def distance_from_two_angles(self, a, min_angle, max_angle):
+        return min(self.distance_between_angles(a, min_angle),
+                   self.distance_between_angles(a, max_angle))
 
     def accelerate_vector(self, vel):
         vel.x += self.acceleration_factor * math.cos(math.radians(self.orientation))
@@ -193,62 +383,3 @@ class Ship(obj.Object):
 
         return (angle_ok and velocity_ok, angle_ok, velocity_ok, top, bot, tangent_a, vel_a)
 
-    def compute(self, fortress):
-        """updates ship"""
-        if self.auto_turn:
-            self.orientation = int(self.angle_to_fortress())
-        else:
-            if self.turn_flag == 'right':
-                self.orientation = (self.orientation - self.turn_speed) % 360
-            elif self.turn_flag == 'left':
-                self.orientation = (self.orientation + self.turn_speed) % 360
-        #thrust is only changed if joystick is engaged. Thrust is calculated while processing joystick input
-        #self.acceleration = self.thrust * -0.3
-        if self.auto_thrust:
-            self.thrust_flag = self.detect_thrustable_conditions()
-
-        if self.thrust_flag == True:
-            self.acceleration = self.acceleration_factor
-            # it uses random so every time the player accelerates he
-            # changes the next random number, affecting the bonus and
-            # mines. This is annoying when the noise is 0 (turned off).
-            if self.acceleration_noise > 0:
-                self.acceleration_factor += random.uniform(-self.acceleration_noise,self.acceleration_noise)
-        else:
-            self.acceleration = 0
-        wind = self.app.compute_wind()
-        self.velocity.x += self.acceleration * math.cos(math.radians(self.orientation)) + wind.x
-        if self.velocity.x > self.max_vel:
-            self.velocity.x = self.max_vel
-        elif self.velocity.x < -self.max_vel:
-            self.velocity.x = -self.max_vel
-        self.velocity.y += self.acceleration * math.sin(math.radians(self.orientation)) + wind.y
-        if self.velocity.y > self.max_vel:
-            self.velocity.y = self.max_vel
-        elif self.velocity.y < -self.max_vel:
-            self.velocity.y = -self.max_vel
-        self.position.x += self.velocity.x
-        self.position.y -= self.velocity.y
-	wrapped = False
-        if self.position.x > self.app.WORLD_WIDTH:
-            self.position.x = 0
-            #self.app.log.write("# wrapped right\n")
-	    wrapped = True
-        if self.position.x < 0:
-            self.position.x = self.app.WORLD_WIDTH
-            #self.app.log.write("# wrapped left\n")
-	    wrapped = True
-        if self.position.y > self.app.WORLD_HEIGHT:
-            self.position.y = 0
-            #self.app.log.write("# wrapped down\n")
-	    wrapped = True
-        if self.position.y < 0:
-            self.position.y = self.app.WORLD_HEIGHT
-            #self.app.log.write("# wrapped up\n")
-	    wrapped = True
-	if wrapped:
-	    self.app.log.add_event('wrapped')
-            if self.wrap_penalty_score == 'cntrl':
-                self.app.score.penalize('cntrl', 'wrap_penalty')
-            elif self.wrap_penalty_score  == 'pnts':
-                self.app.score.penalize('pnts', 'wrap_penalty')

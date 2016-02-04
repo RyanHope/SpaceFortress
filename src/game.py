@@ -96,11 +96,11 @@ class Game(object):
         return Vector2D(mag*math.cos(direction),mag*math.sin(direction))
 
     def process_key_state(self):
-        self.ship.thrust_flag = True = self.key_state.keys['thrust']
+        self.ship.thrust_flag = self.key_state.keys['thrust']
         for e in self.key_state.events:
             if isinstance(e, key_state.Press):
-                if e.id in ['left', 'right']:
-                    self.ship.turn_flag = e.id
+                if e.id in ['thrust', 'left', 'right']:
+                    self.ship.motivator.press_key(e.id)
                 elif e.id == 'fire':
                     self.fire_missile()
                 elif e.id == 'iff':
@@ -112,8 +112,8 @@ class Game(object):
                     if self.bonus.exists:
                         self.bonus.check_for_match(bonus.BONUS_POINTS)
             elif isinstance(e, key_state.Release):
-                if e.id in ['left', 'right'] and self.ship.turn_flag == e.id:
-                    self.ship.turn_flag = False
+                if e.id in ['thrust', 'left', 'right']:
+                    self.ship.motivator.release_key(e.id)
 
     def update_score(self):
         self.IFFIdentification.check_for_timeout(self.log,self.score)
@@ -348,10 +348,9 @@ class Game(object):
             bonus = self.bonus.text
         else:
             bonus = "-"
-        #keys = self.keys_pressed#pygame.key.get_pressed()
-        thrust_key = "y" if self.key_state.keys['thrust'] else "n"
-        left_key   = "y" if self.key_state.keys['left'] else "n"
-        right_key  = "y" if self.key_state.keys['right'] else "n"
+        thrust_key = "y" if self.ship.motivator.thrust_flag else "n"
+        left_key   = "y" if self.ship.motivator.turn_flag == 'left' else "n"
+        right_key  = "y" if self.ship.motivator.turn_flag == 'right' else "n"
         fire_key   = "y" if self.key_state.keys['fire'] else "n"
         iff_key    = "y" if self.key_state.keys['iff'] else "n"
         shots_key  = "y" if self.key_state.keys['shots'] else "n"
@@ -482,11 +481,8 @@ class Game(object):
         self.ship.alive = True
         if self.fortress.exists:
             self.fortress.alive = True
-        self.ship.position.x = 245
-        self.ship.position.y = 315
-        self.ship.velocity.x = float(self.config['ship_start_velocity'][0])
-        self.ship.velocity.y = float(self.config['ship_start_velocity'][1])
-        self.ship.orientation = 90
+        self.ship.reset()
+        self.reset_event_queue()
 
     def tick(self, mspf):
         self.mine.timer.tick(mspf)

@@ -108,11 +108,9 @@ ship_turn_speed 6
 #Ship's maximum velocity. Default is 6
 ship_max_vel 6
 
-# When turned on, automatically point the ship at the fortress. default: 0
-ship_auto_turn 0
-
-# When turned on, the ship semi-intelligently thrusts to maintain an orbit. default: 0
-ship_auto_thrust 0
+# How does the ship move? Valid values: standard, autoturn, discrete, autothrust
+# Default: standard
+ship_motivator discrete
 
 # display debugging info for auto thrust
 auto_thrust_debug 0
@@ -123,6 +121,10 @@ draw_auto_state 0
 # Primarily used with ship_auto_turn. Specify the starting velocity of the ship.
 # default: 0 0
 ship_start_velocity 0 0
+
+# Specify the starting orientation of the ship
+# default: 90
+ship_start_orientation 90
 
 ### MISSILE CONSTANTS ###
 

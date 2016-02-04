@@ -115,6 +115,9 @@ class SDLGame(game.Game):
     def get_event(self):
         return pygame.event.get()
 
+    def reset_event_queue(self):
+        pygame.event.clear()
+
     def is_caret_key(self,event):
         return event.key == pygame.K_CARET or (event.key == pygame.K_6 and
                                                (event.mod&pygame.KMOD_LSHIFT or

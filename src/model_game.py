@@ -72,6 +72,10 @@ class ModelGame(game.Game):
         else:
             return None
 
+    def reset_event_queue(self):
+        # self.commands = ['continue']
+        pass
+
     def process_input_events(self):
         self.send_objects('events')
         while True:
