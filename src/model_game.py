@@ -24,6 +24,14 @@ class ModelGame(game.Game):
         self.log.open_gamelogs(self.config)
 
     def delay(self, ms):
+        self.set_objects(self.get_world_state_for_model('game'))
+        self.send_objects('delay', ms)
+        while True:
+            args = self.read_command()
+            if args[0] == 'quit':
+                self.quit = True
+            elif args[0] == 'continue':
+                break
         self.gameTimer.tick(ms)
 
     def now(self):
