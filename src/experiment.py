@@ -1,7 +1,7 @@
 import pygame
 import config
 import random
-from dialog import read_string, read_int, read_from_list
+from sfdialog import read_string, read_int, read_from_list
 
 import log
 import assets
