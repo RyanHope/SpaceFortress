@@ -67,7 +67,6 @@ class Game(object):
         self.collisions = []
         # logging
         self.log = log.game_log(self.config['id'],config.get_datapath(self.config),self.session_name,self.game_number)
-        self.open_logs()
 
     def press_key(self, key_id):
         if key_id in self.key_state.keys:
@@ -536,6 +535,7 @@ class Game(object):
     def start(self):
         self.gameTimer = Timer()
         self.destroyed = False
+        self.open_logs()
 
     def finish(self):
         self.calculate_reward()
