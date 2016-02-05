@@ -15,7 +15,7 @@ all: source binary
 source: $(SRCDEST).tgz
 
 $(SRCDEST).tgz:
-	git archive --format=tar --prefix=$(SRCDEST)/ HEAD | gzip -9 > $(SRCDEST).tgz
+	git archive --format=tar --prefix=$(SRCDEST)/ HEAD | gzip -9 > builds/$(SRCDEST).tgz
 
 binary:
 	cd src && $(PYTHON) setup.py py2app
@@ -24,7 +24,7 @@ binary:
 	mkdir builds/$(DMGDEST)/$(DMGDEST)/data
 	mv src/dist/PSF.app builds/$(DMGDEST)/$(DMGDEST)
 	cp $(CONFIG)/* builds/$(DMGDEST)/$(DMGDEST)/config
-	rm builds/$(DMGDEST).dmg
+	rm -f builds/$(DMGDEST).dmg
 	hdiutil create -srcfolder builds/$(DMGDEST) builds/$(DMGDEST).dmg
 	rm -r builds/$(DMGDEST)
 
@@ -51,5 +51,5 @@ analysis:
 
 .PHONY: clean
 clean:
-	rm -f PSF-$(NAME)-source-*.tgz
-	rm -f PSF-*.dmg
+	rm -f builds/newfs-$(NAME)-source-*.tgz
+	rm -f builds/newfs-*.dmg
