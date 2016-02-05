@@ -8,6 +8,7 @@ import game
 import log
 import config
 import missile
+import drawing
 from experiment import exp
 from assets import Assets
 
@@ -110,6 +111,11 @@ class SDLGame(game.Game):
                 drawing.draw_tag(self.screen, 165, 20, "Turn", True, font=self.f)
             if self.ship.auto_thrust:
                 drawing.draw_tag(self.screen, 230, 20, "Thrust", True, font=self.f)
+        if self.wait_for_player == True:
+            ms = 1500
+            i = 105 + abs(int((self.gameTimer.time % ms) / ms * 300) - 150)
+            c = (i,i,i)
+            drawing.blit_text(self.screen, self.f, "Press a key to start", color=c, y=425, valign='center', halign='center')
         pygame.display.flip()
 
     def get_event(self):

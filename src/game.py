@@ -96,7 +96,8 @@ class Game(object):
         return Vector2D(mag*math.cos(direction),mag*math.sin(direction))
 
     def process_key_state(self):
-        self.ship.thrust_flag = self.key_state.keys['thrust']
+        if len(self.key_state.events) > 0:
+            self.wait_for_player = False
         for e in self.key_state.events:
             if isinstance(e, key_state.Press):
                 if e.id in ['thrust', 'left', 'right']:
@@ -266,16 +267,15 @@ class Game(object):
                         if self.fortress.exists:
                             self.score.vlner += 1
                             self.log.add_event('vlner-increased')
-                    if self.fortress.vulnerabilitytimer.elapsed() < int(self.config["vlner_time"]) and self.score.vlner >= (int(self.config["vlner_threshold"]) + 1):
+                    elif self.fortress.vulnerabilitytimer.elapsed() < int(self.config["vlner_time"]) and self.score.vlner >= (int(self.config["vlner_threshold"]) + 1):
                         self.log.add_event('fortress-destroyed')
-
                         self.fortress.alive = False
                         self.score.reward('pnts', 'destroy_fortress')
                         self.score.vlner = 0
                         self.play_sound('explosion')
                         self.ship.alive = True
                         self.fortress.deathtimer.reset()
-                    if self.fortress.vulnerabilitytimer.elapsed() < int(self.config["vlner_time"]) and self.score.vlner < (int(self.config["vlner_threshold"]) + 1):
+                    elif self.fortress.vulnerabilitytimer.elapsed() < int(self.config["vlner_time"]) and self.score.vlner < (int(self.config["vlner_threshold"]) + 1):
                         self.log.add_event('vlner-reset')
                         self.score.vlner = 0
                         self.play_sound('vlner-reset')
@@ -289,14 +289,15 @@ class Game(object):
         """chief function to update the world"""
         self.collisions = []
         self.process_key_state()
-        self.update_score()
-        self.update_ship()
-        self.update_fortress()
-        self.IFFIdentification.update(self)
-        self.update_mine()
-        self.update_shells()
-        self.update_missiles()
-        self.update_bonus()
+        if not self.wait_for_player:
+            self.update_score()
+            self.update_ship()
+            self.update_fortress()
+            self.IFFIdentification.update(self)
+            self.update_mine()
+            self.update_shells()
+            self.update_missiles()
+            self.update_bonus()
 
     def get_world_state(self):
         """log current frame's data to text file. Note that first line contains foe mine designations
@@ -474,24 +475,28 @@ class Game(object):
         #self.fortresstimer.tick(1000)
         #self.fortressdeathtimer.tick(1000)
         self.fortress.timer.reset()
-
+        self.fortress.vulnerabilitytimer.reset(int(self.config["vlner_time"]))
+        
         #self.mine.timer.reset()
         #self.mine.alive = False
         #self.score.iff = ""
         self.ship.alive = True
         if self.fortress.exists:
             self.fortress.alive = True
+            self.fortress.orientation = 180
         self.ship.reset()
         self.reset_event_queue()
+        self.wait_for_player = int(self.config['wait_for_player'])
 
     def tick(self, mspf):
-        self.mine.timer.tick(mspf)
-        self.score.updatetimer.tick(mspf)
-        self.bonus.timer.tick(mspf)
-        self.IFFIdentification.timer.tick(mspf)
-        self.fortress.vulnerabilitytimer.tick(mspf)
-        self.fortress.deathtimer.tick(mspf)
-        self.fortress.timer.tick(mspf)
+        if not self.wait_for_player:
+            self.mine.timer.tick(mspf)
+            self.score.updatetimer.tick(mspf)
+            self.bonus.timer.tick(mspf)
+            self.IFFIdentification.timer.tick(mspf)
+            self.fortress.vulnerabilitytimer.tick(mspf)
+            self.fortress.deathtimer.tick(mspf)
+            self.fortress.timer.tick(mspf)
 
     def set_objects(self,objects):
         pass
@@ -529,6 +534,7 @@ class Game(object):
     def start(self):
         self.gameTimer = Timer()
         self.destroyed = False
+        self.wait_for_player = int(self.config['wait_for_player'])
         self.open_logs()
 
     def finish(self):

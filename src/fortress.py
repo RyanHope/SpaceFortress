@@ -15,6 +15,7 @@ class Fortress(obj.Object):
         self.start_position.x = 355
         self.start_position.y = 315
         self.collision_radius = 18 #I'm making this up
+        self.orientation = 180
         self.last_orientation = self.orientation 
         self.shell_alive = False
         self.automated = True
@@ -34,7 +35,7 @@ class Fortress(obj.Object):
         self.half_size = 30 #I can't find what this is supposed to be - it's used heavily in RSF's compute_fortess()
         self.timer = timer.Timer()
         self.deathtimer = timer.Timer()
-        self.vulnerabilitytimer = timer.Timer()
+        self.vulnerabilitytimer = timer.Timer(int(config["vlner_time"]))
         self.sector_size = int(config["fortress_sector_size"])
         self.lock_time = int(config["fortress_lock_time"])
         self.exists = int(config["fortress_enable"]) == 1
