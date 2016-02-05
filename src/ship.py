@@ -224,6 +224,8 @@ class AutoTurn(Motivator):
 class Discrete(Motivator):
     def __init__(self, ship, config):
         super(self.__class__, self).__init__(ship, config)
+        self.thrust_duration = int(config["discrete_thrust_ticks"])
+        self.turn_duration = int(config["discrete_turn_ticks"])
         self.thrust_ticks = 0
         self.turn_ticks = 0
 
@@ -234,12 +236,12 @@ class Discrete(Motivator):
 
     def press_key(self, key):
         if key == 'thrust':
-            self.thrust_ticks += 3
+            self.thrust_ticks += self.thrust_duration
         elif key in ['left', 'right']:
             if self.turn_flag == key or self.turn_flag == False:
-                self.turn_ticks += 4
+                self.turn_ticks += self.turn_duration
             else:
-                self.turn_ticks = 4
+                self.turn_ticks = self.turn_duration
             self.turn_flag = key
 
     def release_key(self, key):

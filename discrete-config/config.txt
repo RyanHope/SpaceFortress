@@ -117,6 +117,12 @@ ship_max_vel 6
 # Default: standard
 ship_motivator discrete
 
+# How many ticks does a thrust last in the discrete movement mode?
+discrete_thrust_ticks 4
+
+# How many ticks does a turn last in the discrete movement mode?
+discrete_turn_ticks 3
+
 # display debugging info for auto thrust
 auto_thrust_debug 0
 
