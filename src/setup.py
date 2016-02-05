@@ -22,7 +22,7 @@ plist = dict(
 
 setup(
     data_files=['gfx', 'fonts', 'sounds'],
-    options={'py2app': {'iconfile': 'PSF.icns', 'arch': 'i386'}},
+    options={'py2app': {'excludes': 'OpenGL', 'iconfile': 'PSF.icns', 'arch': 'i386'}},
     app=[
         dict(script="main.py", plist=plist),
     ],

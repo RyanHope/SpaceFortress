@@ -24,6 +24,7 @@ binary:
 	mkdir builds/$(DMGDEST)/$(DMGDEST)/data
 	mv src/dist/PSF.app builds/$(DMGDEST)/$(DMGDEST)
 	cp $(CONFIG)/* builds/$(DMGDEST)/$(DMGDEST)/config
+	rm builds/$(DMGDEST).dmg
 	hdiutil create -srcfolder builds/$(DMGDEST) builds/$(DMGDEST).dmg
 	rm -r builds/$(DMGDEST)
 
