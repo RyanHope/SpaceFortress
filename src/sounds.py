@@ -28,6 +28,7 @@ class Sounds(object):
     @staticmethod
     def play(sound_id):
         if sound_id in Sounds.sounds:
+            Sounds.sounds[sound_id].stop()
             Sounds.sounds[sound_id].play()
         else:
             raise Exception('Unable to play sound "%s"'%sound_id)

@@ -32,6 +32,7 @@ class Experiment(object):
         self.log = log.session_log(self.gc['id'], config.get_datapath(self.gc), config.get_session_name(self.gc))
 
     def setup_video(self, fullscreen, create_display):
+        pygame.mixer.pre_init(frequency=44100, buffer=2048)
         pygame.init()
         if create_display:
             if fullscreen:
