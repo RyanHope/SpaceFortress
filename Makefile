@@ -19,13 +19,13 @@ $(SRCDEST).tgz:
 
 binary:
 	cd src && $(PYTHON) setup.py py2app
-	rm -fr builds/$(DMGDEST)
 	mkdir -p builds/$(DMGDEST)/$(DMGDEST)
 	mkdir builds/$(DMGDEST)/$(DMGDEST)/config
 	mkdir builds/$(DMGDEST)/$(DMGDEST)/data
 	mv src/dist/PSF.app builds/$(DMGDEST)/$(DMGDEST)
 	cp $(CONFIG)/* builds/$(DMGDEST)/$(DMGDEST)/config
 	hdiutil create -srcfolder builds/$(DMGDEST) builds/$(DMGDEST).dmg
+	rm -r builds/$(DMGDEST)
 
 .PHONY: analysis
 analysis:
