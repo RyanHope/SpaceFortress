@@ -109,8 +109,8 @@ class ModelGame(game.Game):
     def run(self):
         self.start()
         while not self.quit:
-            self.step_one_tick()
             self.gameTimer.tick(33)
+            self.step_one_tick()
             if self.cur_time >= int(self.config["game_time"]):
                 break
         if self.quit:
