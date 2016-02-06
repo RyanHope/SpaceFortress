@@ -72,8 +72,20 @@ class ModelGame(game.Game):
         else:
             return None
 
+    def encode_keycode(self, code):
+        if code in ['thrust', 'left', 'right', 'fire', 'iff', 'shots', 'pnts']:
+            for k,v in self.key_bindings.iteritems():
+                if code == v:
+                    return int(k)
+        elif code in self.key_bindings:
+            return int(code)
+        else:
+            return None
+
     def process_input_events(self):
+        self.key_state.reset_tick()
         self.send_objects('events')
+        keys = []
         while True:
             args = self.read_command()
             if (args[0] == 'quit'):
@@ -82,12 +94,17 @@ class ModelGame(game.Game):
                 k = self.decode_keycode(args[1])
                 if k != None:
                     self.press_key(k)
+                    keys.append([2,self.encode_keycode(k),0])
             elif (args[0] == 'keyup'):
                 k = self.decode_keycode(args[1])
                 if k != None:
                     self.release_key(k)
+                    keys.append([3,self.encode_keycode(k),0])
             elif args[0] == 'continue':
                 break
+        b = [self.tinc]
+        b.append(keys)
+        self.log.write_keys(b)
 
     def run(self):
         self.start()
