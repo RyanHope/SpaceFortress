@@ -199,16 +199,17 @@ class Game(object):
         for i, shell in enumerate(self.shell_list):          #move any shells, delete if offscreen, tests for collision with ship
             shell.compute()
             if shell.position.x < 0 or shell.position.x > self.WORLD_WIDTH or shell.position.y < 0 or shell.position.y > self.WORLD_HEIGHT:
-                del self.shell_list[i]
+                self.shell_list[i].alive = False
             if self.ship.alive:
                 if shell.test_collision(self.ship):
                     self.log.add_event('shell-hit-ship')
                     self.collisions.append('shell')
-                    del self.shell_list[i]
+                    self.shell_list[i].alive = False
                     self.score.penalize('pnts', 'shell_hit_penalty')
                     self.ship.take_damage()
                     if not self.ship.alive:
                         self.log.add_event('ship-destroyed')
+        self.shell_list = [ s for s in self.shell_list if s.alive ]
 
     def fire_missile(self):
         if (self.mine.exists or self.fortress.exists) and not self.ship.firing_disabled:
@@ -226,9 +227,9 @@ class Game(object):
         for i, missile in enumerate(self.missile_list):      #move any missiles, delete if offscreen
             missile.compute()
             if missile.position.x < 0 or missile.position.x > self.WORLD_WIDTH or missile.position.y < 0 or missile.position.y > self.WORLD_HEIGHT:
-                del self.missile_list[i]
-            if missile.test_collision(self.mine) and self.mine.alive: #missile hits mine?
-                del self.missile_list[i]
+                self.missile_list[i].alive = False
+            elif missile.test_collision(self.mine) and self.mine.alive: #missile hits mine?
+                self.missile_list[i].alive = False
                 self.collisions.append('missile-mine')
                 if self.mine.is_friend(): #friendly
                     if self.IFFIdentification.intervalflag or self.mine.is_tagged(): #false tag
@@ -255,11 +256,8 @@ class Game(object):
                         self.mine.kill()
                     else:
                         self.log.add_event('hit-untagged-foe')
-        # enumerating a second time, so that when mine and fortress
-        # overlap, we only remove the missile once.
-        for i, missile in enumerate(self.missile_list):
-            if missile.test_collision(self.fortress):
-                del self.missile_list[i]
+            elif missile.test_collision(self.fortress):
+                self.missile_list[i].alive = False
                 if self.fortress.alive:
                     self.log.add_event('hit-fortress')
                     self.collisions.append('fortress')
@@ -280,6 +278,7 @@ class Game(object):
                         self.score.vlner = 0
                         self.play_sound('vlner-reset')
                     self.fortress.vulnerabilitytimer.reset()
+        self.missile_list = [ m for m in self.missile_list if m.alive ]
 
     def update_bonus(self):
         if self.bonus.exists:
