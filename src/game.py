@@ -304,7 +304,7 @@ class Game(object):
         format:
         system_clock game_time ship_alive? ship_x ship_y ship_vel_x ship_vel_y ship_orientation mine_alive? mine_x mine_y 
         fortress_alive? fortress_orientation [missile_x missile_y missile_orientation ...] [shell_x shell_y shell_orientation ...] bonus_symbol
-        pnts cntrl vlcty vlner iff intervl speed shots thrust_key left_key right_key fire_key iff_key shots_key pnts_key"""
+        pnts cntrl vlcty vlner iff intervl speed shots thrust_key left_key right_key fire_key iff_key shots_key pnts_key game_active"""
         if self.cur_time_override != None:
             game_time = self.cur_time_override
         else:
@@ -360,9 +360,10 @@ class Game(object):
             iff = '-'
         else:
             iff = self.score.iff
+        game_active = "n" if self.wait_for_player else "y"
         return (game_time, ship_alive, ship_x, ship_y, ship_vel_x, ship_vel_y, ship_orientation, mine_alive, mine_x, mine_y, fortress_alive, fortress_orientation,\
                 missile, shell, bonus, self.score.pnts, self.score.cntrl, self.score.vlcty, self.score.vlner, iff, self.score.intrvl,\
-                self.score.speed, self.score.shots, thrust_key, left_key, right_key, fire_key, iff_key, shots_key, pnts_key)
+                self.score.speed, self.score.shots, thrust_key, left_key, right_key, fire_key, iff_key, shots_key, pnts_key, game_active)
 
     def get_world_state_for_model(self,screen_type):
         missiles = []

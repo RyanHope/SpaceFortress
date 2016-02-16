@@ -32,7 +32,7 @@ class session_log(base):
 class game_log(base):
     def __init__(self,id,datapath,session_name,game_num):
         super(self.__class__, self).__init__(id, datapath, session_name)
-        self.version = "1.5"
+        self.version = "1.6"
         self.game = game_num
         self.events = []
 
@@ -41,7 +41,7 @@ class game_log(base):
 	self.gamelog.write("# non-hashed line notation:\n")
 	self.gamelog.write("# game_clock system_clock game_time ship_alive? ship_x ship_y ship_vel_x ship_vel_y ship_orientation mine_alive? mine_x mine_y \
 fortress_alive? fortress_orientation [missile_x missile_y missile_orientation ...] [shell_x shell_y shell_orientation ...] bonus_symbol \
-pnts cntrl vlcty vlner iff intervl speed shots thrust_key left_key right_key fire_key iff_key shots_key pnts_key\n")
+pnts cntrl vlcty vlner iff intervl speed shots thrust_key left_key right_key fire_key iff_key shots_key pnts_key game_active\n")
 
     def open_simulate_logs(self):
         self.sessionlog = open(os.path.join(self.datapath, '%s-%s.sim.dat'%(self.id,self.session)),'a')
