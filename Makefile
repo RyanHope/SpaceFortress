@@ -7,6 +7,7 @@ VERSION=$(shell git log --pretty=oneline | wc -l | sed 's/ //g')
 DMGDEST=newsf-$(NAME)-$(VERSION)
 SRCDEST=newsf-$(NAME)-source-$(VERSION)
 ANALYSISDEST=sf-analysis-$(VERSION)
+WXDEST=modelserver-$(NAME)-$(VERSION)
 
 PYTHON=python
 
@@ -27,6 +28,17 @@ binary:
 	rm -f builds/$(DMGDEST).dmg
 	hdiutil create -srcfolder builds/$(DMGDEST) builds/$(DMGDEST).dmg
 	rm -r builds/$(DMGDEST)
+
+wxmodel:
+	cd src && $(PYTHON) wxmodel_setup.py py2app
+	mkdir -p builds/$(WXDEST)/$(WXDEST)
+	mkdir builds/$(WXDEST)/$(WXDEST)/config
+	mkdir builds/$(WXDEST)/$(WXDEST)/data
+	mv src/dist/ModelServer.app builds/$(WXDEST)/$(WXDEST)
+	cp $(CONFIG)/* builds/$(WXDEST)/$(WXDEST)/config
+	rm -f builds/$(WXDEST).dmg
+	hdiutil create -srcfolder builds/$(WXDEST) builds/$(WXDEST).dmg
+	rm -r builds/$(WXDEST)
 
 .PHONY: analysis
 analysis:
