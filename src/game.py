@@ -96,7 +96,7 @@ class Game(object):
         return Vector2D(mag*math.cos(direction),mag*math.sin(direction))
 
     def process_key_state(self):
-        if len(self.key_state.events) > 0:
+        if self.wait_for_player and next((True for ev in self.key_state.events if isinstance(ev, key_state.Press)), False):
             self.wait_for_player = False
         for e in self.key_state.events:
             if isinstance(e, key_state.Press):
