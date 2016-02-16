@@ -248,18 +248,17 @@ class Discrete(Motivator):
         pass
 
     def move (self):
-        if self.thrust_ticks > 0:
-            self.thrust_ticks -= 1
-        if self.turn_ticks > 0:
-            self.turn_ticks -= 1
         self.thrust_flag = self.thrust_ticks > 0
         if self.turn_ticks <= 0:
             self.turn_flag = False
-
         self.do_turning()
         self.do_thrusting()
         self.add_movement_vectors()
         self.handle_wrapping()
+        if self.thrust_ticks > 0:
+            self.thrust_ticks -= 1
+        if self.turn_ticks > 0:
+            self.turn_ticks -= 1
 
 class AutoThrust(Motivator):
     def __init__(self, ship, config):
