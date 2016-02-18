@@ -30,7 +30,7 @@ class connection (threading.Thread):
         session_name = config.get_session_name(gc)
         if session_name == None:
             session_name = "1"
-        i = 0;
+        i = 1;
         while True:
             game_file = '%s-%s-%d.dat'%(gc['id'], session_name, i)
             incomplete = 'incomplete-' + game_file
