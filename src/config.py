@@ -7,7 +7,9 @@ import copy
 import re
 import argparse
 
-def read_conf(conf_file,config={},config_path='config',ignore=["#", "\n","\r","\t"]):
+def read_conf(conf_file,config=None,config_path='config',ignore=["#", "\n","\r","\t"]):
+    if config == None:
+        config = {}
     configfile = open(os.path.join(config_path, conf_file))
     configlog = configfile.readlines()
     # FIXME: should we make a copy of the base config? I think it doesn't matter at this point. -sabetts
