@@ -43,6 +43,15 @@ class game_log(base):
 fortress_alive? fortress_orientation [missile_x missile_y missile_orientation ...] [shell_x shell_y shell_orientation ...] bonus_symbol \
 pnts cntrl vlcty vlner iff intervl speed shots thrust_key left_key right_key fire_key iff_key shots_key pnts_key game_active\n")
 
+    def rename_existing_file(self, f):
+        if os.path.exists(f):
+            n = 1
+            new_file = "%s.%d.bak"%(f,n)
+            while os.path.exists(new_file):
+                n += 1
+                new_file = "%s.%d.bak"%(f,n)
+            os.rename(f, new_file)
+
     def open_simulate_logs(self):
         self.sessionlog = open(os.path.join(self.datapath, '%s-%s.sim.dat'%(self.id,self.session)),'a')
         tempname = os.path.join(self.datapath,"%s-%s-%d.sim.dat"%(self.id, self.session, self.game))
@@ -65,6 +74,9 @@ pnts cntrl vlcty vlner iff intervl speed shots thrust_key left_key right_key fir
         #print tempname
         keyfile = tempname[:-3]+"key"
         evtfile = tempname[:-3]+"evt"
+        # Make sure we NEVER overwrite existing data
+        for f in [tempname, keyfile, evtfile]:
+            self.rename_existing_file(f)
         self.gamelog = codecs.open(tempname, "w", 'utf-8')
         self.eventlog = open(evtfile,'w')
         self.keylog = open(keyfile, 'w')
@@ -80,6 +92,7 @@ pnts cntrl vlcty vlner iff intervl speed shots thrust_key left_key right_key fir
 
     def record_config(self, config):
         self.config_filename = os.path.join(self.datapath, "incomplete-%s-%s-%d.config.txt"%(self.id,self.session,self.game))
+        self.rename_existing_file(self.config_filename)
         with codecs.open(self.config_filename, "w", 'utf-8') as out:
             for k,v in (sorted(config.items())):
                 out.write('%s %s\n'%(k,v))
@@ -117,6 +130,8 @@ pnts cntrl vlcty vlner iff intervl speed shots thrust_key left_key right_key fir
             (dir,name) = os.path.split(f)
             if name.startswith('incomplete-'):
                 new = os.path.join(dir,name[11:])
+                # Make sure we NEVER overwrite existing data
+                self.rename_existing_file(new)
                 os.rename(f,new)
 
     def log_premature_exit(self):
