@@ -199,7 +199,11 @@ class score(message):
 
 class bonus(message):
     def __init__(self):
-        super(bonus, self).__init__(False)
+        super(bonus, self).__init__('bonus', False)
+
+    def start(self):
+        obj = {'bonus': experiment.exp.bonus}
+        experiment.exp.log.slog(self.name, obj)
 
     def draw(self):
         drawing.fullscreen_message(self.screen,[drawing.text("You earned a $%s bonus!"%format_money(experiment.exp.bonus),self.f36,(255,255,0))],
