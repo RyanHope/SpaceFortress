@@ -362,6 +362,10 @@ draw_key_state 0
 # Set this to 1 to turn on modeling mode
 model 0
 
+# What model interface to use? Default is version 1
+# Possible values: 1, 2
+model_interface 1
+
 # This is the TCP port that space fortress listens on for model connections
 model_port 3000
 

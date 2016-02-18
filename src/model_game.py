@@ -1,5 +1,6 @@
 import copy
 import lisp
+import model_socket
 import game
 
 class ModelGame(game.Game):
@@ -27,7 +28,7 @@ class ModelGame(game.Game):
         self.set_objects(self.get_world_state_for_model('game'))
         self.send_objects('delay', ms)
         while True:
-            args = self.read_command()
+            args = self.channel.read_command()
             if args[0] == 'quit':
                 self.quit = True
             elif args[0] == 'continue':
@@ -51,18 +52,8 @@ class ModelGame(game.Game):
             self.objects['mode'] = mode
             if delay_duration:
                 self.objects['delay_duration'] = delay_duration
-            self.channel.send((lisp.lispify(self.objects) + self.line_endings).encode('utf-8'))
+            self.channel.send(self.objects)
             self.objects = None
-
-    def read_command(self):
-        if len(self.commands) == 0:
-            buf = self.channel.recv(4096)
-            if buf:
-                self.commands = buf.lower().splitlines()
-            else:
-                print "Model disconnected."
-                self.commands = ['quit', 'continue']
-        return self.commands.pop(0).split(' ')
 
     def decode_keycode (self, code):
         if code in ['thrust', 'left', 'right', 'fire', 'iff', 'shots', 'pnts']:
@@ -91,7 +82,11 @@ class ModelGame(game.Game):
         self.send_objects('events')
         keys = []
         while True:
-            args = self.read_command()
+            try:
+                args = self.channel.read_command()
+            except model_socket.disconnected:
+                self.quit = True
+                break
             if (args[0] == 'quit'):
                 self.quit = True
             elif (args[0] == 'keydown'):
