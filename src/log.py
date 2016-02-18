@@ -95,7 +95,10 @@ pnts cntrl vlcty vlner iff intervl speed shots thrust_key left_key right_key fir
         self.rename_existing_file(self.config_filename)
         with codecs.open(self.config_filename, "w", 'utf-8') as out:
             for k,v in (sorted(config.items())):
-                out.write('%s %s\n'%(k,v))
+                if isinstance(v, basestring):
+                    out.write('%s %s\n'%(k,v))
+                else:
+                    out.write('%s %s\n'%(k,' '.join(v)))
 
     def session_comment(self,string):
         """Add a comment to the session file."""
