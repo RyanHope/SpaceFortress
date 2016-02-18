@@ -17,7 +17,7 @@ class session_log(base):
         self.game = 0
 
     def open_slog(self):
-        self.sessionlog = open(os.path.join(self.datapath, '%s-%s.dat'%(self.id,self.session)),'a')
+        self.sessionlog = open(os.path.join(self.datapath, '%s-%s.dat'%(self.id,self.session)),'a', 0)
 
     def close_slog(self):
         self.sessionlog.close()
@@ -77,9 +77,9 @@ pnts cntrl vlcty vlner iff intervl speed shots thrust_key left_key right_key fir
         # Make sure we NEVER overwrite existing data
         for f in [tempname, keyfile, evtfile]:
             self.rename_existing_file(f)
-        self.gamelog = codecs.open(tempname, "w", 'utf-8')
-        self.eventlog = open(evtfile,'w')
-        self.keylog = open(keyfile, 'w')
+        self.gamelog = codecs.open(tempname, "w", 'utf-8', 'strict', 0)
+        self.eventlog = open(evtfile,'w', 0)
+        self.keylog = open(keyfile, 'w', 0)
         self.write_gamelog_header()
         self.record_config(config)
 
