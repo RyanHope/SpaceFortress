@@ -414,6 +414,7 @@ class Game(object):
                 'intrvl': self.score.intrvl or None,
                 'speed': self.score.speed, 'shots': self.score.shots,
                 'crew': self.score.crew_members,
+                'active': not self.wait_for_player,
                 'keys': keys,
                 'collisions': map(lisp.symbol, self.collisions)}
 
