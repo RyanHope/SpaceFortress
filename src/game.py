@@ -98,6 +98,7 @@ class Game(object):
     def process_key_state(self):
         if self.wait_for_player and next((True for ev in self.key_state.events if isinstance(ev, key_state.Press)), False):
             self.wait_for_player = False
+            self.log.add_event('game-active')
         for e in self.key_state.events:
             if isinstance(e, key_state.Press):
                 if e.id in ['thrust', 'left', 'right']:
@@ -488,6 +489,8 @@ class Game(object):
         self.ship.reset()
         self.reset_event_queue()
         self.wait_for_player = int(self.config['wait_for_player'])
+        if self.wait_for_player:
+            self.log.add_event('wait-for-player')
 
     def tick(self, mspf):
         if not self.wait_for_player:
@@ -537,6 +540,8 @@ class Game(object):
         self.destroyed = False
         self.wait_for_player = int(self.config['wait_for_player'])
         self.open_logs()
+        if self.wait_for_player:
+            self.log.add_event('wait-for-player')
 
     def finish(self):
         self.calculate_reward()
