@@ -52,8 +52,10 @@ class HUD(wx.Frame):
         # self.text.SetInsertionPointEnd()
         self.text.AppendText(data + '\n')
 
-
-if __name__ == '__main__':
+def start_wx_model_server():
     app = wx.App()
     frame = HUD()
     app.MainLoop()
+
+if __name__ == '__main__':
+    start_wx_model_server()

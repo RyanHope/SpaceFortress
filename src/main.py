@@ -1,5 +1,4 @@
 from __future__ import division
-import pygame
 import sys
 import os
 import copy
@@ -39,6 +38,10 @@ def gen_screens():
         gnum += 1
     exp.screens.append(screens.bonus())
 
-if __name__ == '__main__':
+def start_sdl_experiment():
+    exp.setup()
     gen_screens()
     exp.run()
+
+if __name__ == '__main__':
+    start_sdl_experiment()

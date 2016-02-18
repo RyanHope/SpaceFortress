@@ -12,6 +12,8 @@ class Experiment(object):
         self.screens = []
         self.current = None
         self.bonus = 0
+
+    def setup(self):
         # Load config files
         (self.gc, self.config_path) = config.get_global_config()
 
