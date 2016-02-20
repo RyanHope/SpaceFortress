@@ -2,7 +2,7 @@ NAME=
 QUICKLISP=~/quicklisp
 XLSX=/Volumes/data/work/git/xlsx.git
 
-CONFIG=$(NAME)-config
+CONFIG=config/$(NAME).yml
 VERSION=$(shell git log --pretty=oneline | wc -l | sed 's/ //g')
 DMGDEST=newsf-$(NAME)-$(VERSION)
 SRCDEST=newsf-$(NAME)-source-$(VERSION)
@@ -24,7 +24,7 @@ binary:
 	mkdir builds/$(DMGDEST)/$(DMGDEST)/config
 	mkdir builds/$(DMGDEST)/$(DMGDEST)/data
 	mv src/dist/PSF.app builds/$(DMGDEST)/$(DMGDEST)
-	cp $(CONFIG)/* builds/$(DMGDEST)/$(DMGDEST)/config
+	cp $(CONFIG) builds/$(DMGDEST)/$(DMGDEST)/config/space-fortress.yml
 	rm -f builds/$(DMGDEST).dmg
 	hdiutil create -srcfolder builds/$(DMGDEST) builds/$(DMGDEST).dmg
 	rm -r builds/$(DMGDEST)
@@ -35,7 +35,7 @@ wxmodel:
 	mkdir builds/$(WXDEST)/$(WXDEST)/config
 	mkdir builds/$(WXDEST)/$(WXDEST)/data
 	mv src/dist/ModelServer.app builds/$(WXDEST)/$(WXDEST)
-	cp $(CONFIG)/* builds/$(WXDEST)/$(WXDEST)/config
+	cp $(CONFIG) builds/$(WXDEST)/$(WXDEST)/config/space-fortress.yml
 	rm -f builds/$(WXDEST).dmg
 	hdiutil create -srcfolder builds/$(WXDEST) builds/$(WXDEST).dmg
 	rm -r builds/$(WXDEST)
