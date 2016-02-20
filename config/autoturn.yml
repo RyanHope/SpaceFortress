@@ -1,0 +1,400 @@
+# GLOBAL CONFIGURATION FILE -*- yaml -*-
+# This file must be present in the SpaceFortress directory
+# and contains settings for the overall experiment as well
+# as shared settings for the different conditoins
+#
+# All lines that begin with '#' are comments
+
+# The setting in the global section are global. A session inherits the
+# settings from global. Any options set in a session section shadow
+# the global setting. A game inherits the settings from the global
+# section as well as the current session section. Options set in the
+# game section shadow the session setting and, therefore, the global
+# setting.
+global:
+  # Specify the kind of screen used to display the task for the next
+  # game. Possible options are: basic incremental
+  task_screen: fmri
+
+  #Time in milliseconds for a game. Default is 180000 (3 minutes)
+  game_time: 180000
+
+  # Pauses every 2 games to wait for user input and then a ^
+  # (should work with MRI experiments)
+  image: 0
+
+  # Game sounds are enabled when this is set to 1.
+  sounds: 1
+
+  # Automatically Select the type of bonus (shots or points)
+  # when the subject presses the shots key
+  # This allows us to eliminate the points key, and only use 6 fingers
+  bonus_select: 1
+
+  # Maximum bonus payout per game (in cents).
+  bonus_per_game: 75
+
+  # To calculate the bonus per game, divide the points garnered in a
+  # game by this value and multiply it by bonus_per_game.
+  bonus_max_points_per_game: 2000
+
+  # If the subject accidentally escapes the session early, use these
+  # resume play. So for example, if the subject accidentally hit 
+  # escape during the 2nd game, you should set resume to True, 
+  # and resume_game to 2 and then restart PSF
+  #resume True
+  #resume_game 2
+
+  #Key bindings - use digits, lowercase letters, or caps for special keys
+  #(e.g., ESCAPE, RETURN, UP)
+  key_bindings:
+    thrust: w
+    left: UNKNOWN
+    right: d
+    fire: SPACE
+    IFF: j
+    shots: k
+    pnts: l
+
+  # Key bindings for data glove
+  # Left hand: Pinkie = 0 Ring = 9 Middle = 8 Index = 7 Thumb = 6
+  # Right hand: Pinkie = 5 Ring = 4 Middle = 3 Index = 2 Thumb = 1
+  #
+  #uncomment the following lines to use the data glove
+  # keybindings:
+  #   thrust 8
+  #   left 9
+  #   right 7
+  #   fire 2
+  #   IFF 3
+  #   shots 4
+
+  ### SIMULATOR FLAGS ###
+  # enable/disable simulator
+  simulate: 0
+  # session to simulate
+  #session 1
+  # factor to speed up the simulation (1 = real-time)
+  #speedup 2
+  # game within session to start at
+  #game 1
+
+  ### DISPLAY SETTINGS ###
+  foe_mine_time: 10000
+  condition_time: 10000
+  score_time: 10000
+  fixation_time: 20000
+
+  # Before starting the game and after every ship death, wait for the
+  # player to press a key. Note that the game timer continues to run.
+  # Default: 0
+  wait_for_player: 0
+
+  ### SHIP CONSTANTS ###
+
+  #Number of hits ship takes before it is destroyed. Default is 4
+  ship_hit_points: 1
+
+  # Number of crew members. Each crew member remaining at the end of the
+  # game is worth points. Set to 0 to disable.
+  crew_members: 0
+
+  # What a surviving crew member is worth. Default is 100.
+  crew_member_points: 100
+
+  #Ship acceleration factor. Default is 0.3
+  ship_acceleration: 0.3
+
+  ship_acceleration_noise: 0
+
+  #Ship's turning speed. Default is 6
+  ship_turn_speed: 6
+
+  #Ship's maximum velocity. Default is 6
+  ship_max_vel: 6
+
+  # How does the ship move? Valid values: standard, autoturn, discrete, autothrust
+  # Default: standard
+  ship_motivator: autoturn
+
+  # How many ticks does a thrust last in the discrete movement mode?
+  discrete_thrust_ticks: 4
+
+  # How many ticks does a turn last in the discrete movement mode?
+  discrete_turn_ticks: 3
+
+  # display debugging info for auto thrust
+  auto_thrust_debug: 0
+
+  # display which "auto" options are enabled
+  draw_auto_state: 0
+
+  # Primarily used with autoturn. Specify the starting velocity of the ship.
+  # default: 0 0
+  ship_start_velocity: [0, 1]
+
+  # Specify the starting orientation of the ship
+  # default: 90
+  ship_start_orientation: 0
+
+  ### MISSILE CONSTANTS ###
+
+  #Speed of missile fired from ship. Default is 20
+  missile_speed: 20
+
+  #Points lost when you fire a missile. Default is 0
+  missile_penalty: 2
+
+  #Points lost when you fire a missile when none remain. Default is 3
+  missile_debt_penalty: 3
+
+  ### MINE CONSTANTS ###
+
+  #Do mines exists? Set to 0 to turn mines off
+  # ** MOVED TO SPECIFIC GAME FILE **
+  #mine_enable: 0
+
+  #Mine speed. Default is 5
+  mine_speed: 5
+
+  #Probability that next mine will be a foe. Default is 0.3
+  mine_probability: 0.5
+
+  #Time in milliseconds for a mine to timeout and disappear. Default is 10000 (10 sec)
+  mine_timeout: 10000
+
+  #Time in milliseconds for a mine to spawn. Default is 5000 (5 sec)
+  mine_spawn: 6000
+
+  # The mine's spawn time will be randomly chosen between mine_spawn +/- mine_spawn_noise
+  mine_spawn_noise: 2000
+
+  #Number of foe mines to memorize at the beginning of each game. Default is 3
+  num_foes: 3
+
+  #Minimum time between double-clicks to identify foe mine. Default is 250
+  intrvl_min: 250
+
+  #Maximum time between double-clicks to identify foe mine. Default is 400
+  intrvl_max: 400
+
+  # Hard code when mines appear on the screen. times are relative to the
+  # beginning of the game.
+  # mine_list: [5000, 10000, 15000]
+
+  # Predetermine the type of mines in groups of this size. The size
+  # times the mine probability should be an integer or the probability
+  # will get skewed. 0 means disable.
+  mine_probability_group_size: 4
+
+  ### FORTRESS CONSTANTS ###
+
+  #Fortress "sector size." Angle of tolerance before fortress turns to face ship.
+  #Bigger means fortress fires more often. Default is 10
+  fortress_sector_size: 10
+
+  #Time in milliseconds it takes the fortress to lock on to the ship before firing.
+  #Default is 1000
+  fortress_lock_time: 1000
+
+  #Time in milliseconds that must pass between shots to avoid the fortress'
+  #vulnerability to reset
+  vlner_time: 250
+
+  #Minimum vulnerability before you can destroy the fortress with a double shot.
+  #Default is 10
+  vlner_threshold: 10
+
+  ### SHELL CONSTANTS ###
+
+  #Speed of shell fired from fortress. Default is 6
+  shell_speed: 6
+
+  ### HEXAGON CONSTANTS ###
+
+  #"Radius" of large hexagon. Default is 200
+  big_hex: 200
+
+  #"Radius" of small hexagon. Default is 40
+  small_hex: 40
+
+  ### BONUS SYMBOL CONSTANTS ###
+
+  #Bonus symbol. Default is $
+  bonus_symbol: $
+
+  #Non-bonus symbols. Defaults are # & * % @. Don't use '-', because that's used
+  #in the log file to represent no symbol present
+  non_bonus_symbols: ['#', '&', '*', '%', '@']
+
+  #Probability that next symbol will be the bonus symbol. Default is 0.3
+  bonus_probability: 0.3
+
+  #"Blank time" between symbol appearances in milliseconds. Default is 833
+  #(Seems like a weird number, but it's to sync with the frame-based original)
+  symbol_down_time: 833
+
+  #Time in milliseconds each symbol is visible. Default is 2500
+  symbol_up_time: 2500
+
+  bonus_nback: 1
+  bonus_disable_firing: 0
+
+  # The number of PNTS points to pay out for the bonus. default: 100
+  bonus_pnts: 100
+
+  # The number of shots to pay out for the bonus. default: 50
+  bonus_shots: 50
+
+  ### SCORE CONSTANTS ###
+
+  # What scores to report in the score area?
+  # Possibilities: pnts vlner vlcty cntrl iff intrvl speed shots crew
+  score_labels: [pnts, vlner]
+
+  #How often (in milliseconds) the VLCTY and CNTRL scores update. Default is 1000
+  update_timer: 1000
+
+  #Speed at which you're considered to be going "too fast", resulting in a VLCTY
+  #point penalty. Default is 4
+  min_speed_threshold: .9
+  max_speed_threshold: 4
+
+  # Which scores are turned on?
+  # default: pnts cntrl vlcty speed
+  active_scores: pnts
+
+  # Do we allow pnts to go negative? default: allowed
+  negative_pnts: prohibited
+
+  #VLCTY bonus/penalty for going either slow enough or too fast. Default is 7
+  VLCTY_increment: 7
+
+  #Number of points added to CNTRL score for staying with the hexagons. Default is 6.
+  #Note that half this number is added when outside the hexagons, so even is recommended.
+  CNTRL_increment: 6
+
+  #Penalty for colliding with the small hexagon. Default is 5
+  small_hex_penalty: 5
+
+  # What score should the penalty apply to? Valid values: cntrl
+  # pnts. Default value: pnts
+  small_hex_score: pnts
+
+  #Penalty for mine timing out. Default is 50
+  mine_timeout_penalty: 50
+
+  #Penalty for mine hitting ship. Default is 50
+  mine_hit_penalty: 50
+
+  #Penalty for shell hitting ship. Default is 50
+  shell_hit_penalty: 0
+
+  #Penalty for ship destruction. Default is 100
+  ship_death_penalty: 100
+
+  #Points for "energizing" a friendly mine. Default is 20
+  energize_friend: 20
+
+  #Points for destroying a "foe" mine. Default is 30
+  destroy_foe: 30
+
+  #Points for destroying the fortress. Default is 100
+  destroy_fortress: 100
+
+  # Penalty for wrapping around the edge of the screen. Default 35
+  wrap_penalty: 35
+
+  # Choose which score the penalty for wrapping is taken from. Possible
+  # values: pnts cntrl. Default: pnts
+  wrap_score: pnts
+
+  # Specify how many shots the player starts with at the beginning of a
+  # game. To specify an unlimited amount, use "inf".
+  # default: 100
+  shots: inf
+
+  # Fullscreen vs Windowed mode
+  fullscreen: 0
+
+  # Feedback
+
+  # Toggle feedback for IFF key
+  IFF_feedback: 0
+
+  IFF_tries: 1
+
+  # Apply a constant acceleration in a specified direction. defaults: 0 0
+  wind: [0, 0]
+
+  # vary the angle and acceleration of the wind. defaults: 0 0
+  wind_noise: [0, 0]
+
+  # navigation aid -- explode the ship if touches the big or small hexagons
+  # To disable, set parameters to 0.
+  explode_bighex: 1
+  explode_smallhex: 1
+
+  pre_game_screens: basic-task
+
+  post_game_screens: total-score
+
+  # Set how many games are included in a scan block. 0 means there are no blocks.
+  # default value: 0
+  games_per_block: 0
+
+  # screens displayed at the beginning of a block. All screens in
+  # pre_game_screens are valid here.
+  block_start_screens: none
+
+  # screens displayed at the end of a block. All screens in
+  # pre_game_screens are valid here
+  block_end_screens: none
+
+  # screens displayed at the beginning of the session. All screens in
+  # pre_game_screens are valid here.
+  session_start_screens: instructions
+
+  # Draw which keys are pressed on the game screen when this key is set
+  # to 1. Default is 0.
+  draw_key_state: 0
+
+  # Set this to 1 to turn on modeling mode
+  model: 0
+
+  # What model interface to use? Default is version 1
+  # Possible values: 1, 2
+  model_interface: 1
+
+  # This is the TCP port that space fortress listens on for model connections
+  model_port: 3000
+
+  # This tells Space Fortress what line endings to use when sending
+  # screen dumps. Valid values are lf and crlf.
+  model_line_endings: crlf
+
+  # Used for modeling. This tells Space Fortress how much to display on
+  # screen.
+  #
+  # 2 = draw everything
+  # 1 = draw only a status image
+  # 0 = draw nothing
+  display_level: 2
+
+  # We are playing 20 "fortress" games. See game section for details
+  # on that game type.
+  n_games: [20, fortress]
+
+# The session list. Currently set to None.
+sessions: ~
+
+# The conditions list. Currently set to None.
+conditions: ~
+
+# The games list. Currently has one game called fortress.
+games:
+  fortress:
+    fortress_enable: 1
+    bonus_enable: 0
+    mine_enable: 0
+

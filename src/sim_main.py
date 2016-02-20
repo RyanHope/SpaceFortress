@@ -18,12 +18,12 @@ def diff(game):
 
 if __name__ == '__main__':
     (gc, config_path) = config.get_global_config()
-    config.load_session_and_condition(gc, config_path)
+    gc.integrate_session_and_condition()
     game_list = config.get_games(gc)
     # gstart = int(config.get_start_game(gc))
     for i in xrange(len(game_list)):
         print "Simulating game %d ..."%(i+1)
-        c = config.read_conf(config.get_game_config_file(game_list[i]), copy.deepcopy(gc), config_path, ["#", "\n"])
+        c = gc.snapshot(games_list[i])
         g = sim_game.SimGame(c, game_list[i], i+1)
         g.run()
         diff(g)

@@ -6,25 +6,45 @@ import sys
 import copy
 import re
 import argparse
+import yaml
 
-def read_conf(conf_file,config=None,config_path='config',ignore=["#", "\n","\r","\t"]):
-    if config == None:
-        config = {}
-    configfile = open(os.path.join(config_path, conf_file))
-    configlog = configfile.readlines()
-    # FIXME: should we make a copy of the base config? I think it doesn't matter at this point. -sabetts
-    #config = copy.deepcopy(config)
-    for line in configlog:
-        if line[0] in ignore:
-            pass
-        else:
-            command = line.split()
-            if len(command) > 2:
-                config[command[0]] = command[1:]
-            else:
-                config[command[0]] = command[1]
-    configfile.close()
-    return config
+class Config(object):
+    def __init__(self, config_file):
+        super(self.__class__, self).__init__()
+        self.file = config_file
+        with open(self.file) as stream:
+            self.raw_config = yaml.load(stream)
+        self.global_config = self.raw_config['global']
+
+    def integrate_session_and_condition(self):
+        # since the session and condition don't change from game to game,
+        # its safe to load them into the global config
+        if self.raw_config['conditions'] != None and len(self.raw_config['conditions'])>0:
+            for k,v in self.raw_config['conditions'][self.global_config['condition']].iteritems():
+                self.global_config[k] = v
+        if self.raw_config['sessions'] != None and len(self.raw_config['sessions'])>0:
+            for k,v in self.raw_config['sessions'][session].iteritems():
+                self.global_config[k] = v
+
+    def snapshot(self, game):
+        """Create a dictionary containing keys from the global, condition, sesession, and game configs."""
+        config = copy.deepcopy(self.global_config)
+        if game:
+            for k,v in self.raw_config['games'][game].iteritems():
+                config[k] = v
+        return config
+
+    def __getitem__(self, key):
+        return self.global_config[key]
+
+    def __setitem__(self, key, value):
+        self.global_config[key] = value
+
+    def __contains__(self, key):
+        return self.global_config.has_key(key)
+
+    def has_key(self, key):
+        return self.__contains__(key)
 
 def get_config_path(config_dir):
     source_location = "../%s/" % config_dir
@@ -72,9 +92,6 @@ def get_games (gc):
         raise Exception("config files must have either games or random_games key.")
     return game_list
 
-def get_game_config_file (game):
-    return "config_game_%s.txt"%game
-
 def get_num_games(gc):
     if gc.has_key('games'):
         return len(gc['games'])
@@ -101,29 +118,12 @@ def get_session_name(gc):
     else:
         return None
 
-def get_config_files(gc,session=False,condition=False):
-    """Return session and condition config files. If sessions or
-conditions isn't a key in gc then its assumed that a separate config
-file isn't needed. Then None is returned for the corresponding config file."""
-    if gc.has_key('sessions'):
-        if not session:
-            session = gc['session']
-    else:
-        session = None
-    if gc.has_key('conditions'):
-        conditions = gc['conditions']
-        if not condition:
-            condition = conditions[gc['condition']]
-    else:
-        condition = None
-    return ("config_session_%s.txt"%session if session else None,
-            "config_condition_%s.txt"%condition if condition else None)
-
 def parse_command_line():
     #When PSF is run as an osx image arg 2 is -psn... so get rid of it.
     args = [a for a in sys.argv[1:] if not re.match('-psn(?:_\d+)+$', a)]
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config',help="Specify which directory to load config from",default="config")
+    parser.add_argument('--config-dir',help="Specify where the config files are located",default="config")
+    parser.add_argument('--config',help="Specify which config file to load config from",default="space-fortress")
     parser.add_argument('--data', metavar="DIR", help="Specify the data directory")
     parser.add_argument('--display-level', metavar="N", help="set the display level (0=no display, 1=minimal, 2=full)",type=int)
     parser.add_argument('--model-port', metavar="PORT", type=int, help="Specify the port to listen on for model clients")
@@ -136,9 +136,9 @@ def parse_command_line():
 
 def get_global_config():
     args = parse_command_line()
-    config_dir = args.config
+    config_dir = args.config_dir
     config_path = get_config_path(config_dir)
-    gc = read_conf('config.txt',config_path=config_path)
+    gc = Config(os.path.join(config_path, '%s.yml'%args.config))
     # groom config
     if gc.has_key('conditions'):
         if not isinstance(gc['conditions'],list):
@@ -221,19 +221,6 @@ def get_resume_info(gc,config_path):
             raise all_sessions_completed(subject_id)
     else:
             raise no_resume_info(subject_id)
-
-def load_session_and_condition(gc,config_path,session=False,condition=False):
-    (session_file, condition_file) = get_config_files(gc,session,condition)
-    # since the session and condition don't change from game to game,
-    # its safe to load them into the global config
-    if condition_file:
-        read_conf(condition_file,gc,config_path=config_path)
-    if session_file:
-        read_conf(session_file,gc,config_path=config_path)
-    # Make sure games is a list of games
-    if gc.has_key('games'):
-        if not isinstance(gc['games'],list):
-            gc['games'] = [gc['games']]
 
 def get_start_game(gc):
     if gc.has_key('resume_game'):

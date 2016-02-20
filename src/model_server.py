@@ -110,7 +110,7 @@ class connection (threading.Thread):
             while not done:
                 for gname in game_list:
                     self.log.log("%s game %d: %s ..."%(self.gc['id'], gnum, gname))
-                    c = config.read_conf(config.get_game_config_file(gname), copy.deepcopy(self.gc), config_path, ["#", "\n"])
+                    c = gc.snapshot(gname)
                     g = model_game.ModelGame(c, gname, gnum, self.channel)
                     done = g.run()
                     if done:

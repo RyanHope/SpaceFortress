@@ -25,9 +25,7 @@ def gen_screens():
         exp.screens.append(get_screen(s, None))
     gnum = 0
     for g in exp.game_list:
-        c = config.read_conf(config.get_game_config_file(g),
-                             copy.deepcopy(exp.gc),
-                             exp.config_path, ["#", "\n"])
+        c = exp.gc.snapshot(g)
         game = sdl_game.SDLGame(c, g, gnum+1)
         for s in config.as_list(exp.gc,'pre_game_screens'):
             exp.screens.append(get_screen(s, game))

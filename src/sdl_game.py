@@ -18,13 +18,13 @@ class SDLGame(game.Game):
     def __init__(self, conf, game_name, game_number):
         super(self.__class__, self).__init__(conf, game_name, game_number)
         # input
-        self.key_bindings = {eval("pygame.K_%s"%self.config["thrust_key"]): 'thrust',
-                             eval("pygame.K_%s"%self.config["left_turn_key"]): 'left',
-                             eval("pygame.K_%s"%self.config["right_turn_key"]): 'right',
-                             eval("pygame.K_%s"%self.config["fire_key"]): 'fire',
-                             eval("pygame.K_%s"%self.config["IFF_key"]): 'iff',
-                             eval("pygame.K_%s"%self.config["shots_key"]): 'shots',
-                             eval("pygame.K_%s"%self.config["pnts_key"]): 'pnts'}
+        self.key_bindings = {eval("pygame.K_%s"%self.config["key_bindings"]["thrust"]): 'thrust',
+                             eval("pygame.K_%s"%self.config["key_bindings"]["left"]): 'left',
+                             eval("pygame.K_%s"%self.config["key_bindings"]["right"]): 'right',
+                             eval("pygame.K_%s"%self.config["key_bindings"]["fire"]): 'fire',
+                             eval("pygame.K_%s"%self.config["key_bindings"]["IFF"]): 'iff',
+                             eval("pygame.K_%s"%self.config["key_bindings"]["shots"]): 'shots',
+                             eval("pygame.K_%s"%self.config["key_bindings"]["pnts"]): 'pnts'}
 
         # self.keys_pressed = {self.thrust_key:False, self.left_turn_key:False,
         #                      self.right_turn_key:False, self.fire_key:False,

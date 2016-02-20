@@ -20,7 +20,7 @@ class Experiment(object):
         self.setup_video(int(self.gc['fullscreen']) == 1, int(self.gc['model']) == 0 or int(self.gc['display_level'])>0)
         if int(self.gc['display_level']) > 0:
             self.prompt_for_missing_keys()
-        config.load_session_and_condition(self.gc, self.config_path)
+        self.gc.integrate_session_and_condition()
 
         # Generate seeds for session
         if self.gc.has_key('session'):
