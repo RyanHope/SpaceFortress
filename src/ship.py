@@ -2,6 +2,7 @@ from __future__ import division
 from Vector2D import Vector2D
 import math
 import random
+import timer
 import object as obj
 
 class Ship(obj.Object):
@@ -50,6 +51,7 @@ class Ship(obj.Object):
         # self.center_line = sf_object.line.Line()
         # self.r_wing_line = sf_object.line.Line()
         # self.l_wing_line = sf_object.line.Line()
+        self.deathtimer = timer.Timer()
         self.small_hex_flag = False #did we hit the small hex?
         self.wrap_penalty_score = config['wrap_score']
         if not self.wrap_penalty_score in ('cntrl','pnts'):
@@ -107,6 +109,20 @@ class Ship(obj.Object):
     def compute(self, fortress):
         """updates ship"""
         self.motivator.move()
+
+    def kill(self):
+        self.alive = False
+        self.deathtimer.reset()
+        self.app.score.penalize('pnts', 'ship_death_penalty')
+        self.app.play_sound('explosion')
+        self.app.log.add_event('ship-destroyed')
+
+    def take_damage(self, value=1):
+        if value>0:
+            self.damage += value
+        if self.damage >= self.health:
+            self.damage = 0
+            self.kill()
 
 class Motivator(object):
     def __init__(self, ship, config):

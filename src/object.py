@@ -49,14 +49,7 @@ class Object(object):
         self.position = Vector2D(self.position.x + self.velocity.y * time, self.position.y + self.velocity.y * time)
         self.last_updated = GameFrame.clock.get_ticks()
         
-    def take_damage(self, value=1):
-        """damages object"""
-        if value>0:
-            self.damage += value
-        if self.damage >= self.health:
-            self.alive = False
-            self.damage = 0
-            
+
     #utility methods
     
     def to_target_orientation(self, target):

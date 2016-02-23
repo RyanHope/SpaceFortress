@@ -132,31 +132,42 @@ class Game(object):
             else:
                 self.score.reward_amt('cntrl', int(self.config["CNTRL_increment"])//2)
 
+    def monitor_ship_respawn(self):
+        if self.ship.alive == False and self.ship.deathtimer.elapsed() > 1000:
+            self.ship.alive = True
+            self.ship.reset()
+            self.fortress.orientation = 180
+            self.fortress.timer.reset()
+            self.wait_for_player = int(self.config['wait_for_player'])
+            if self.wait_for_player:
+                self.log.add_event('wait-for-player')
+
     def update_ship(self):
-        self.ship.compute(self.fortress)                                  #move ship
-        if self.smallhex.collide(self.ship):
-            self.collisions.append('small-hex')
-            if int(self.config["explode_smallhex"]) == 1:
-                self.ship.alive = False
-                self.log.add_event('explode-smallhex')
-            elif self.ship.small_hex_flag == False: #if ship hits small hex, bounce it back and subtract 5 points
-                self.log.add_event('hit-small-hex')
-                self.ship.small_hex_flag = True
-                self.ship.velocity.x = -self.ship.velocity.x
-                self.ship.velocity.y = -self.ship.velocity.y
-                if self.config["small_hex_score"] == 'cntrl':
-                    self.score.penalize('cntrl', 'small_hex_penalty')
-                elif self.config["small_hex_score"] == 'pnts':
-                    self.score.penalize('pnts', 'small_hex_penalty')
-                else:
-                    raise Exception('dunno what score to penalize for small hex.')
-        else:
-            self.ship.small_hex_flag = False
-        if not self.bighex.collide(self.ship):
-            if int(self.config["explode_bighex"]) == 1:
-                self.collisions.append('big-hex')
-                self.ship.alive = False
-                self.log.add_event('explode-bighex')
+        if self.ship.alive:
+            self.ship.compute(self.fortress)                                  #move ship
+            if self.smallhex.collide(self.ship):
+                self.collisions.append('small-hex')
+                if int(self.config["explode_smallhex"]) == 1:
+                    self.ship.kill()
+                    self.log.add_event('explode-smallhex')
+                elif self.ship.small_hex_flag == False: #if ship hits small hex, bounce it back and subtract 5 points
+                    self.log.add_event('hit-small-hex')
+                    self.ship.small_hex_flag = True
+                    self.ship.velocity.x = -self.ship.velocity.x
+                    self.ship.velocity.y = -self.ship.velocity.y
+                    if self.config["small_hex_score"] == 'cntrl':
+                        self.score.penalize('cntrl', 'small_hex_penalty')
+                    elif self.config["small_hex_score"] == 'pnts':
+                        self.score.penalize('pnts', 'small_hex_penalty')
+                    else:
+                        raise Exception('dunno what score to penalize for small hex.')
+            else:
+                self.ship.small_hex_flag = False
+            if not self.bighex.collide(self.ship):
+                if int(self.config["explode_bighex"]) == 1:
+                    self.collisions.append('big-hex')
+                    self.ship.kill()
+                    self.log.add_event('explode-bighex')
 
     def update_fortress(self):
         """point fortress at ship, will fire if still for a short time"""
@@ -188,8 +199,6 @@ class Game(object):
                     else:
                         self.log.add_event('friend-hit-ship')
                     self.ship.take_damage()
-                    if not self.ship.alive:
-                        self.log.add_event('ship-destroyed')
                     self.mine.kill()
                     self.score.penalize('pnts', 'mine_hit_penalty')
         else:
@@ -210,12 +219,10 @@ class Game(object):
                     self.shell_list[i].alive = False
                     self.score.penalize('pnts', 'shell_hit_penalty')
                     self.ship.take_damage()
-                    if not self.ship.alive:
-                        self.log.add_event('ship-destroyed')
         self.shell_list = [ s for s in self.shell_list if s.alive ]
 
     def fire_missile(self):
-        if (self.mine.exists or self.fortress.exists) and not self.ship.firing_disabled:
+        if self.ship.alive and (self.mine.exists or self.fortress.exists) and not self.ship.firing_disabled:
             self.log.add_event('missile-fired')
             self.missile_list.append(missile.Missile(self))
             self.play_sound('missile-fired')
@@ -274,7 +281,6 @@ class Game(object):
                         self.score.reward('pnts', 'destroy_fortress')
                         self.score.vlner = 0
                         self.play_sound('explosion')
-                        self.ship.alive = True
                         self.fortress.deathtimer.reset()
                     elif self.fortress.vulnerabilitytimer.elapsed() < int(self.config["vlner_time"]) and self.score.vlner < (int(self.config["vlner_threshold"]) + 1):
                         self.log.add_event('vlner-reset')
@@ -291,6 +297,7 @@ class Game(object):
         """chief function to update the world"""
         self.collisions = []
         self.process_key_state()
+        self.monitor_ship_respawn()
         if not self.wait_for_player:
             self.update_score()
             self.update_ship()
@@ -320,8 +327,8 @@ class Game(object):
             ship_orientation = "%.1f"%(self.ship.orientation)
         else:
             ship_alive = "n"
-            ship_x = "-"
-            ship_y = "-"
+            ship_x = "%.3f"%(self.ship.position.x)
+            ship_y = "%.3f"%(self.ship.position.y)
             ship_vel_x = "-"
             ship_vel_y = "-"
             ship_orientation = "-"
@@ -463,37 +470,6 @@ class Game(object):
         self.log.glog("raw pnts %d"%self.score.raw_pnts)
         self.log.glog("bonus earned $%s"%self.format_money())
 
-    def reset_position(self):
-        """pauses the game and resets"""
-        self.set_objects(self.get_world_state_for_model('game'))
-        if not self.simulate:
-            self.play_sound('explosion')
-            if self.image:
-                self.wait_and_eat_carets(1000)
-            else:
-                self.delay(1000)
-        #self.minetimer.tick(1000)
-        #self.updatetimer.tick(1000)
-        #self.bonustimer.tick(1000)
-        #self.intervaltimer.tick(1000)
-        #self.fortresstimer.tick(1000)
-        #self.fortressdeathtimer.tick(1000)
-        self.fortress.timer.reset()
-        self.fortress.vulnerabilitytimer.reset(int(self.config["vlner_time"]))
-        
-        #self.mine.timer.reset()
-        #self.mine.alive = False
-        #self.score.iff = ""
-        self.ship.alive = True
-        if self.fortress.exists:
-            self.fortress.alive = True
-            self.fortress.orientation = 180
-        self.ship.reset()
-        self.reset_event_queue()
-        self.wait_for_player = int(self.config['wait_for_player'])
-        if self.wait_for_player:
-            self.log.add_event('wait-for-player')
-
     def tick(self, mspf):
         if not self.wait_for_player:
             self.mine.timer.tick(mspf)
@@ -503,15 +479,14 @@ class Game(object):
             self.fortress.vulnerabilitytimer.tick(mspf)
             self.fortress.deathtimer.tick(mspf)
             self.fortress.timer.tick(mspf)
+            self.ship.deathtimer.tick(mspf)
 
     def set_objects(self,objects):
         pass
 
     def step_one_tick(self):
-        prev_time = self.cur_time
-        self.cur_time = self.gameTimer.elapsed()
-        times = (self.cur_time, self.now())
-        self.tinc = self.cur_time - prev_time
+        times = (self.gameTimer.elapsed(), self.now())
+        self.tinc = self.gameTimer.last_tick
         # Process Input
         self.set_objects(self.get_world_state_for_model('game'))
         self.process_input_events()
@@ -522,20 +497,6 @@ class Game(object):
         self.draw_world()
         # Increase clock time by the difference from the last frame
         self.tick(self.tinc)
-        # Reset fortresss timer once ship has been destroyed
-        if self.destroyed:
-            self.fortress.timer.reset()
-            self.destroyed = False
-        # XXX: for some reason the fortress timer isn't properly
-        # reset in reset_position so we need to do this little
-        # dance.
-        if self.ship.alive == False:
-            self.reset_position()
-            if self.score.crew_members > 0:
-                self.score.crew_members -= 1
-            else:
-                self.score.penalize('pnts', 'ship_death_penalty')
-            self.destroyed = True
 
     def start(self):
         self.gameTimer = Timer()

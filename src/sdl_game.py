@@ -174,8 +174,8 @@ class SDLGame(game.Game):
     def run(self):
         exp.log.slog('setup',{'condition': self.condition_name, 'session': self.session_number, 'game': self.game_name})
         self.load_display_assets()
-        self.start()
         self.screen.fill((0,0,0))
+        self.start()
         exp.log.slog('begin')
         time = pygame.time.get_ticks()
         while True:
