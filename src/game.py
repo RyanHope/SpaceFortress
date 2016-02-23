@@ -96,26 +96,28 @@ class Game(object):
         return Vector2D(mag*math.cos(direction),mag*math.sin(direction))
 
     def process_key_state(self):
-        if self.wait_for_player and next((True for ev in self.key_state.events if isinstance(ev, key_state.Press)), False):
-            self.wait_for_player = False
-            self.log.add_event('game-active')
-        for e in self.key_state.events:
-            if isinstance(e, key_state.Press):
-                if e.id in ['thrust', 'left', 'right']:
-                    self.ship.motivator.press_key(e.id)
-                elif e.id == 'fire':
-                    self.fire_missile()
-                elif e.id == 'iff':
-                    self.IFFIdentification.keypress(self.log, self.score)
-                elif e.id == 'shots':
-                    if self.bonus.exists:
-                        self.bonus.check_for_match(bonus.BONUS_SHOTS)
-                elif e.id == 'pnts':
-                    if self.bonus.exists:
-                        self.bonus.check_for_match(bonus.BONUS_POINTS)
-            elif isinstance(e, key_state.Release):
-                if e.id in ['thrust', 'left', 'right']:
-                    self.ship.motivator.release_key(e.id)
+        if self.wait_for_player:
+            if next((True for ev in self.key_state.events if isinstance(ev, key_state.Press)), False):
+                self.wait_for_player = False
+                self.log.add_event('game-active')
+        else:
+            for e in self.key_state.events:
+                if isinstance(e, key_state.Press):
+                    if e.id in ['thrust', 'left', 'right']:
+                        self.ship.motivator.press_key(e.id)
+                    elif e.id == 'fire':
+                        self.fire_missile()
+                    elif e.id == 'iff':
+                        self.IFFIdentification.keypress(self.log, self.score)
+                    elif e.id == 'shots':
+                        if self.bonus.exists:
+                            self.bonus.check_for_match(bonus.BONUS_SHOTS)
+                    elif e.id == 'pnts':
+                        if self.bonus.exists:
+                            self.bonus.check_for_match(bonus.BONUS_POINTS)
+                elif isinstance(e, key_state.Release):
+                    if e.id in ['thrust', 'left', 'right']:
+                        self.ship.motivator.release_key(e.id)
 
     def update_score(self):
         self.IFFIdentification.check_for_timeout(self.log,self.score)
