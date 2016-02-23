@@ -24,15 +24,15 @@ class connection (threading.Thread):
         self.raw_channel = channel
         self.log = logger
 
-    def get_next_game (self, gc):
-        datapath = config.get_datapath(gc)
-        datapath += '/%s/'%gc['id']
-        session_name = config.get_session_name(gc)
-        if session_name == None:
-            session_name = "1"
+    def get_next_game (self):
+        datapath = self.gc['datapath']
+        datapath += '/%s/'%self.gc['id']
+        session_number = self.gc['session']
+        if session_number == None:
+            session_number = 1
         i = 1;
         while True:
-            game_file = '%s-%s-%d.dat'%(gc['id'], session_name, i)
+            game_file = '%s-%d-%d.dat'%(self.gc['id'], session_number, i)
             incomplete = 'incomplete-' + game_file
             if not (os.path.exists(os.path.join(datapath, game_file)) or os.path.exists(os.path.join(datapath, incomplete))):
                 break
@@ -77,11 +77,29 @@ class connection (threading.Thread):
 
         while True:
             objects['id'] = self.gc['id']
+            objects['condition'] = self.gc['condition']
+            objects['session'] = self.gc['session']
             self.channel.send(objects)
             cmd = self.channel.read_command()
             if cmd[0] == 'id' and len(cmd) >= 2:
                 self.gc['id'] = cmd[1]
                 objects['result'] = True
+            if cmd[0] == 'condition' and len(cmd) >= 2:
+                if self.gc.raw_config['conditions'].has_key(cmd[0]):
+                    self.gc['condition'] = cmd[1]
+                    objects['result'] = True
+                else:
+                    objects['result'] = False
+            if cmd[0] == 'session' and len(cmd) >= 2:
+                try:
+                    s = int(cmd[1])
+                    if self.gc.raw_config['sessions'] != None and s >= 1 and s <= len(self.gc.raw_config['sessions']):
+                        self.gc['session'] = s
+                        objects['result'] = True
+                    else:
+                        objects['result'] = False
+                except ValueError:
+                    objects['result'] = False
             elif cmd[0] == 'config' and len(cmd) >= 3:
                 if len(cmd) > 3:
                     self.gc[cmd[1]] = cmd[2:]
@@ -93,24 +111,34 @@ class connection (threading.Thread):
             else:
                 objects['result'] = False
 
-    def run(self):
-        (self.gc, config_path) = config.get_global_config()
-        self.channel = model_socket.ModelSocket(self.raw_channel, '\r\n' if self.gc['model_line_endings'] == 'crlf' else '\n')
-        config.load_session_and_condition(self.gc, config_path)
+    def fill_in_missing_keys(self):
         if not self.gc.has_key('id'):
             self.gc['id'] = 'model'
+        if not self.gc.has_key('condition'):
+            if self.gc.raw_config['conditions'] != None:
+                lst = sorted(self.gc.raw_config['conditions'].keys())
+                self.gc['condition'] = lst[0]
+        if not self.gc.has_key('session'):
+            if self.gc.raw_config['sessions'] != None:
+                self.gc['session'] = 1
+
+    def run(self):
+        self.gc = config.get_global_config()
+        self.channel = model_socket.ModelSocket(self.raw_channel, '\r\n' if self.gc['model_line_endings'] == 'crlf' else '\n')
+        self.fill_in_missing_keys();
         gnum = -1
         self.protocol = int(self.gc['model_interface'])
         try:
             if self.protocol == NEW_PROTOCOL:
                 self.do_config_screen()
-            game_list = config.get_games(self.gc)
-            gnum = self.get_next_game(self.gc)
+            self.gc.integrate_session_and_condition()
+            game_list = self.gc.get_games()
+            gnum = self.get_next_game()
             done = False
             while not done:
                 for gname in game_list:
                     self.log.log("%s game %d: %s ..."%(self.gc['id'], gnum, gname))
-                    c = gc.snapshot(gname)
+                    c = self.gc.snapshot(gname)
                     g = model_game.ModelGame(c, gname, gnum, self.channel)
                     done = g.run()
                     if done:
@@ -134,7 +162,7 @@ class Server(object):
         self.log = logger
         self.connections = []
 
-        (gc, config_path) = config.get_global_config()
+        gc = config.get_global_config()
         port = int(gc['model_port'])
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

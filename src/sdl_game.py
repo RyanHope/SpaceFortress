@@ -172,7 +172,7 @@ class SDLGame(game.Game):
         exp.bonus += self.money
 
     def run(self):
-        exp.log.slog('setup',{'condition': self.condition_name, 'session': self.session_name, 'game': self.game_name})
+        exp.log.slog('setup',{'condition': self.condition_name, 'session': self.session_number, 'game': self.game_name})
         self.load_display_assets()
         self.start()
         self.screen.fill((0,0,0))

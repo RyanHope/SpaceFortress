@@ -25,8 +25,8 @@ class Game(object):
         self.WORLD_WIDTH = 710
         self.WORLD_HEIGHT = 626
         # config variables
-        self.condition_name = config.get_condition_name(self.config)
-        self.session_name = config.get_session_name(self.config)
+        self.condition_name = self.config['condition']
+        self.session_number = self.config['session']
         self.game_name = game_name
         self.game_number = game_number
         self.simulate = int(self.config["simulate"]) == 1
@@ -64,7 +64,7 @@ class Game(object):
         self.bonus.flag = True
         self.collisions = []
         # logging
-        self.log = log.game_log(self.config['id'],config.get_datapath(self.config),self.session_name,self.game_number)
+        self.log = log.game_log(self.config['id'],self.config['datapath'],self.session_number,self.game_number)
 
     def press_key(self, key_id):
         if key_id in self.key_state.keys:

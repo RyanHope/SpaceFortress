@@ -9,30 +9,31 @@ import sdl_game
 import screens
 from experiment import exp
 
-def get_screen(name, game):
+def get_screen(name, game, game_list):
     # print name
     if name == 'instructions':
         return screens.instructions("Ask Experimenter for Instructions")
     elif name == 'basic-task':
         return screens.basic_task()
     elif name == 'total-score':
-        return screens.total_score(len(exp.game_list), True, int(game.config['score_time']), 'continue', game)
+        return screens.total_score(len(game_list), True, int(game.config['score_time']), 'continue', game)
     else:
         raise Exception('unknown screen "%s"'%name)
 
 def gen_screens():
     for s in config.as_list(exp.gc,'session_start_screens'):
-        exp.screens.append(get_screen(s, None))
+        exp.screens.append(get_screen(s, None, None))
     gnum = 0
-    for g in exp.game_list:
+    game_list = exp.gc.get_games()
+    for g in game_list:
         c = exp.gc.snapshot(g)
         game = sdl_game.SDLGame(c, g, gnum+1)
         for s in config.as_list(exp.gc,'pre_game_screens'):
-            exp.screens.append(get_screen(s, game))
+            exp.screens.append(get_screen(s, game, game_list))
         exp.screens.append(game)
         # print g
         for s in config.as_list(exp.gc,'post_game_screens'):
-            exp.screens.append(get_screen(s, game))
+            exp.screens.append(get_screen(s, game, game_list))
         gnum += 1
     exp.screens.append(screens.bonus())
 

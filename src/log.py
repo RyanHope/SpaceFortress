@@ -4,20 +4,20 @@ import time
 import codecs
 
 class base(object):
-    def __init__(self, id, datapath, session_name):
+    def __init__(self, id, datapath, session_number):
         self.id = id
-        self.session = "1" if session_name == None else session_name
+        self.session = 1 if session_number == None else session_number
         self.datapath = datapath + "/%s/"%self.id
         if not os.path.exists(self.datapath):
             os.mkdir(self.datapath)
 
 class session_log(base):
-    def __init__(self, id, datapath, session_name):
-        super(self.__class__, self).__init__(id, datapath, session_name)
+    def __init__(self, id, datapath, session_number):
+        super(self.__class__, self).__init__(id, datapath, session_number)
         self.game = 0
 
     def open_slog(self):
-        self.sessionlog = open(os.path.join(self.datapath, '%s-%s.dat'%(self.id,self.session)),'a', 0)
+        self.sessionlog = open(os.path.join(self.datapath, '%s-%d.dat'%(self.id,self.session)),'a', 0)
 
     def close_slog(self):
         self.sessionlog.close()
@@ -30,8 +30,8 @@ class session_log(base):
         self.sessionlog.write("%f %d %s %s\n"%(time.time(),self.game,string, " ".join(acc)))
 
 class game_log(base):
-    def __init__(self,id,datapath,session_name,game_num):
-        super(self.__class__, self).__init__(id, datapath, session_name)
+    def __init__(self,id,datapath,session_number,game_num):
+        super(self.__class__, self).__init__(id, datapath, session_number)
         self.version = "1.6"
         self.game = game_num
         self.events = []
@@ -53,9 +53,9 @@ pnts cntrl vlcty vlner iff intervl speed shots thrust_key left_key right_key fir
             os.rename(f, new_file)
 
     def open_simulate_logs(self):
-        self.sessionlog = open(os.path.join(self.datapath, '%s-%s.sim.dat'%(self.id,self.session)),'a')
-        tempname = os.path.join(self.datapath,"%s-%s-%d.sim.dat"%(self.id, self.session, self.game))
-        simfile = os.path.join(self.datapath,"%s-%s-%d.key"%(self.id, self.session, self.game))
+        self.sessionlog = open(os.path.join(self.datapath, '%s-%d.sim.dat'%(self.id,self.session)),'a')
+        tempname = os.path.join(self.datapath,"%s-%d-%d.sim.dat"%(self.id, self.session, self.game))
+        simfile = os.path.join(self.datapath,"%s-%d-%d.key"%(self.id, self.session, self.game))
         keyfile = tempname[:-3]+'key'
         evtfile = tempname[:-3]+"evt"
         self.gamelog = codecs.open(tempname,'w','utf-8')
@@ -70,7 +70,7 @@ pnts cntrl vlcty vlner iff intervl speed shots thrust_key left_key right_key fir
         self.config_filename = "unused"
 
     def open_gamelogs(self, config):
-        tempname = os.path.join(self.datapath,"incomplete-%s-%s-%d.dat"%(self.id, self.session, self.game))
+        tempname = os.path.join(self.datapath,"incomplete-%s-%d-%d.dat"%(self.id, self.session, self.game))
         #print tempname
         keyfile = tempname[:-3]+"key"
         evtfile = tempname[:-3]+"evt"
@@ -91,7 +91,7 @@ pnts cntrl vlcty vlner iff intervl speed shots thrust_key left_key right_key fir
             self.simulate_key_stream.close()
 
     def record_config(self, config):
-        self.config_filename = os.path.join(self.datapath, "incomplete-%s-%s-%d.config.txt"%(self.id,self.session,self.game))
+        self.config_filename = os.path.join(self.datapath, "incomplete-%s-%d-%d.config.txt"%(self.id,self.session,self.game))
         self.rename_existing_file(self.config_filename)
         with codecs.open(self.config_filename, "w", 'utf-8') as out:
             for k,v in (sorted(config.items())):

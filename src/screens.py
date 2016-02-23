@@ -94,10 +94,10 @@ class total_score(message):
         """shows score for last game and waits to continue"""
         total = self.game.get_total_score()
         self.screen.fill((0, 0, 0))
-        if self.game.session_name == None:
+        if self.game.session_number == None:
             title = "Game %d of %s"%(self.game.game_number, self.gmax)
         else:
-            title = "Session %s, Game %d of %s"%(self.sname, self.game.game_number, self.gmax)
+            title = "Session %d, Game %d of %s"%(self.game.session_number, self.game.game_number, self.gmax)
         drawing.blit_text(self.screen,self.f24,title,y=100,valign='top',halign='center')
         drawing.blit_text(self.screen,self.f36,"You scored %d points."%self.game.get_total_score(),y=320,valign='top',halign='center')
         drawing.blit_text(self.screen,self.f36,"You earned a bonus of $%s this game."%format_money(self.game.money),y=370,valign='top',halign='center')
@@ -136,10 +136,10 @@ class score(message):
         total = 0
         score = {}
         self.screen.fill((0, 0, 0))
-        if self.game.session_name == None:
+        if self.game.session_number == None:
             title = "Game %d of %s"%(self.game.game_number, self.game.games_in_session)
         else:
-            title = "Session %s, Game %d of %s"%(self.game.session_name, self.game.game_number, self.game.games_in_session)
+            title = "Session %d, Game %d of %s"%(self.game.session_number, self.game.game_number, self.game.games_in_session)
         drawing.blit_text(self.screen,sel.f24,title,y=100,valign='top',halign='center')
         col1 = []
         col2 = []

@@ -17,9 +17,9 @@ def diff(game):
 
 
 if __name__ == '__main__':
-    (gc, config_path) = config.get_global_config()
+    gc = config.get_global_config()
     gc.integrate_session_and_condition()
-    game_list = config.get_games(gc)
+    game_list = gc.get_games()
     # gstart = int(config.get_start_game(gc))
     for i in xrange(len(game_list)):
         print "Simulating game %d ..."%(i+1)

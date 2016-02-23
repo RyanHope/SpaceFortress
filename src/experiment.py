@@ -15,23 +15,20 @@ class Experiment(object):
 
     def setup(self):
         # Load config files
-        (self.gc, self.config_path) = config.get_global_config()
+        self.gc = config.get_global_config()
 
         self.setup_video(int(self.gc['fullscreen']) == 1, int(self.gc['model']) == 0 or int(self.gc['display_level'])>0)
         if int(self.gc['display_level']) > 0:
             self.prompt_for_missing_keys()
         self.gc.integrate_session_and_condition()
-
         # Generate seeds for session
-        if self.gc.has_key('session'):
-            random.seed(gc['sessions'].index(self.gc['session'])+hash(self.gc["id"]))
+        if self.gc['session'] != None:
+            random.seed(hash(self.gc['session']) + hash(self.gc["id"]))
         else:
             random.seed(hash(self.gc["id"]))
-        self.seeds = [random.randint(0,10000) for x in xrange(config.get_num_games(self.gc))]
+        self.seeds = [random.randint(0,10000) for x in xrange(self.gc.get_num_games())]
         # games
-        self.game_list = config.get_games(self.gc)
-        self.gstart = config.get_start_game(self.gc)
-        self.log = log.session_log(self.gc['id'], config.get_datapath(self.gc), config.get_session_name(self.gc))
+        self.log = log.session_log(self.gc['id'], self.gc['datapath'], self.gc['session'])
 
     def setup_video(self, fullscreen, create_display):
         pygame.mixer.pre_init(frequency=44100, buffer=2048)
@@ -55,28 +52,12 @@ class Experiment(object):
         if not self.gc.has_key('id'):
             self.gc['id'] = read_string("Enter user id:", screen, font)
         if not self.gc.has_key('condition'):
-            if self.gc.has_key('conditions'):
-                self.gc['condition'] = read_from_list("Choose the condition:", screen, font,self.gc['conditions'])
+            if self.gc.raw_config['conditions'] != None:
+                lst = sorted(self.gc.raw_config['conditions'].keys())
+                self.gc['condition'] = lst[read_from_list("Choose the condition:", screen, font, lst)]
         if not self.gc.has_key('session'):
-            if self.gc.has_key('sessions'):
-                try:
-                    (resume_session,resume_game) = config.get_resume_info(self.gc, self.config_path)
-                except all_sessions_completed:
-                    if read_from_list("This subject has completed all sessions!",screen,font,['Pick a session anyway','Quit']) == 1:
-                        sys.exit()
-                    resume_session = False
-                    resume_game = False
-                pick_session = True
-                if resume_session:
-                    idx = self.gc['sessions'].index(resume_session)
-                    if idx > 0 or resume_game > 1:
-                        pick_session = read_from_list("Resume subject on game %s of session %s?"%(resume_game,resume_session),
-                                                      screen,font,['Resume', 'Pick the session'])
-                if pick_session:
-                    self.gc['session'] = self.gc['sessions'][read_from_list("Choose the session:", screen, font,self.gc['sessions'])]
-                else:
-                    self.gc['session'] = resume_session
-                    self.gc['game'] = resume_game
+            if self.gc.raw_config['sessions'] != None:
+                self.gc['session'] = read_from_list("Choose the session:", screen, font, [ i+1 for i in self.gc.raw_config['sessions'] ])
 
     # def prompt_for_simulation_keys(gc):
     #     '''Simulation mode expects some extra keys to be present. prompt if missing.'''
