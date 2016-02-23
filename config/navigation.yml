@@ -12,6 +12,9 @@
 # game section shadow the session setting and, therefore, the global
 # setting.
 global:
+  # For experimenter's convenience, use the discrete condition
+  condition: discrete
+
   # Specify the kind of screen used to display the task for the next
   # game. Possible options are: basic incremental
   task_screen: fmri
@@ -49,7 +52,7 @@ global:
   #(e.g., ESCAPE, RETURN, UP)
   key_bindings:
     thrust: w
-    left: UNKNOWN
+    left: a
     right: d
     fire: SPACE
     IFF: j
@@ -88,7 +91,7 @@ global:
   # Before starting the game and after every ship death, wait for the
   # player to press a key. Note that the game timer continues to run.
   # Default: 0
-  wait_for_player: 1
+  wait_for_player: 0
 
   ### SHIP CONSTANTS ###
 
@@ -364,7 +367,7 @@ global:
 
   # What model interface to use? Default is version 1
   # Possible values: 1, 2
-  model_interface: 1
+  model_interface: 2
 
   # This is the TCP port that space fortress listens on for model connections
   model_port: 3000
@@ -381,15 +384,32 @@ global:
   # 0 = draw nothing
   display_level: 2
 
-  # We are playing 20 "fortress" games. See game section for details
-  # on that game type.
-  n_games: [20, fortress]
+# The session list in the order participants go through them.
+sessions:
+  - n_games: [20, fortress]
 
-# The session list. Currently set to None.
-sessions: ~
-
-# The conditions list. Currently set to None.
-conditions: ~
+# The conditions list. There are 3 conditions.
+conditions:
+  explode:
+    ship_motivator: standard
+    ship_start_velocity: [0, 0]
+    ship_start_orientation: 90
+  autoturn:
+    ship_motivator: autoturn
+    ship_start_velocity: [0, 1]
+  discrete:
+    key_bindings:
+      thrust: w
+      left: UNKNOWN
+      right: d
+      fire: SPACE
+      IFF: j
+      shots: k
+      pnts: l
+    ship_motivator: discrete
+    ship_start_velocity: [0, 1]
+    ship_start_orientation: 0
+    wait_for_player: 1
 
 # The games list. Currently has one game called fortress.
 games:
