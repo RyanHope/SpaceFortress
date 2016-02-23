@@ -131,10 +131,9 @@ def parse_command_line():
     parser.add_argument('--display-level', metavar="N", help="set the display level (0=no display, 1=minimal, 2=full)",type=int)
     parser.add_argument('--model-port', metavar="PORT", type=int, help="Specify the port to listen on for model clients")
     parser.add_argument('--id', help="Specify the subject ID")
-    parser.add_argument('--simulate', help="Play back the key file for a specified game (simulation mode)", action='store_true')
-    parser.add_argument('--speedup', metavar="N", help="Specify the simulation speed up factor")
-    parser.add_argument('--session', metavar="N", help="Specify the session to simulation")
-    parser.add_argument('--game', metavar="N", help="Specify the game to simulation", default="1")
+    parser.add_argument('--session', metavar="N", help="Specify the session")
+    parser.add_argument('--condition', metavar="N", help="Specify the condition")
+    parser.add_argument('--game', metavar="N", help="Specify the game (used in simulation mode)")
     return parser.parse_args(args)
 
 def get_global_config():
@@ -151,11 +150,10 @@ def get_global_config():
         gc['display_level'] = args.display_level
     if args.id != None:
         gc['id'] = args.id
-    if args.simulate:
-        gc['simulate'] = "1"
+    if args.session != None:
+        gc['session'] = args.session
+    if args.condition != None:
+        gc['condition'] = args.condition
+    if args.game:
         gc['game'] = args.game
-        if args.session != None:
-            gc['session'] = args.session
-        if args.speedup != None:
-            gc['speedup'] = args.speedup
     return gc
