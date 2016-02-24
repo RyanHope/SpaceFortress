@@ -384,9 +384,11 @@ global:
   # 0 = draw nothing
   display_level: 2
 
-# The session list in the order participants go through them.
-sessions:
-  - n_games: [20, fortress]
+  # We want to play 20 fortress games in a row.
+  n_games: [20, fortress]
+
+# The session list in the order participants go through them. Currently empty.
+sessions: ~
 
 # The conditions list. There are 3 conditions.
 conditions:
