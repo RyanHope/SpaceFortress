@@ -485,7 +485,8 @@ class Game(object):
         pass
 
     def step_one_tick(self):
-        times = (self.gameTimer.elapsed(), self.now())
+        self.cur_time = self.gameTimer.elapsed()
+        times = (self.cur_time, self.now())
         self.tinc = self.gameTimer.last_tick
         # Process Input
         self.set_objects(self.get_world_state_for_model('game'))
