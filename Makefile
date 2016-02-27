@@ -8,6 +8,7 @@ DMGDEST=newsf-$(NAME)-$(VERSION)
 SRCDEST=newsf-$(NAME)-source-$(VERSION)
 ANALYSISDEST=sf-analysis-$(VERSION)
 WXDEST=modelserver-$(NAME)-$(VERSION)
+REPLAYDEST=replay-$(NAME)-$(VERSION)
 
 PYTHON=python
 
@@ -39,6 +40,16 @@ wxmodel:
 	rm -f builds/$(WXDEST).dmg
 	hdiutil create -srcfolder builds/$(WXDEST) builds/$(WXDEST).dmg
 	rm -r builds/$(WXDEST)
+
+replay:
+	cd src && $(PYTHON) replay_setup.py py2app
+	mkdir -p builds/$(REPLAYDEST)/$(REPLAYDEST)
+	mkdir builds/$(REPLAYDEST)/$(REPLAYDEST)/data
+	mv src/dist/Replay.app builds/$(REPLAYDEST)/$(REPLAYDEST)
+	rm -f builds/$(REPLAYDEST).dmg
+	hdiutil create -srcfolder builds/$(REPLAYDEST) builds/$(REPLAYDEST).dmg
+	rm -r builds/$(REPLAYDEST)
+
 
 .PHONY: analysis
 analysis:
