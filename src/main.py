@@ -37,7 +37,7 @@ def gen_screens():
         for s in config.as_list(exp.gc,'post_game_screens'):
             exp.screens.append(get_screen(s, game, game_list))
         gnum += 1
-        if gnum % 5 == 0:
+        if exp.gc['questionnaire'] != None and gnum % exp.gc['questionnaire'] == 0:
             exp.screens.append(screens.questionnaire())
     exp.screens.append(screens.bonus())
 

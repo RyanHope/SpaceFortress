@@ -13,7 +13,7 @@
 # setting.
 global:
   # For experimenter's convenience, use the discrete condition
-  condition: discrete
+  condition: questionnaire
 
   # When debugging is enabled, the left/right arrow keys will jump
   # back/forward through the screens. Default value: 0
@@ -346,6 +346,10 @@ global:
 
   post_game_screens: total-score
 
+  # Add the questionnaire screen every specified number of
+  # games. Default value: None.
+  questionnaire: ~
+
   # Set how many games are included in a scan block. 0 means there are no blocks.
   # default value: 0
   games_per_block: 0
@@ -416,6 +420,21 @@ conditions:
     ship_start_velocity: [0, 1]
     ship_start_orientation: 0
     wait_for_player: 1
+  questionnaire:
+    # Same as discrete but add the questionnaire every 5 games.
+    key_bindings:
+      thrust: w
+      left: UNKNOWN
+      right: d
+      fire: SPACE
+      IFF: j
+      shots: k
+      pnts: l
+    ship_motivator: discrete
+    ship_start_velocity: [0, 1]
+    ship_start_orientation: 0
+    wait_for_player: 1
+    questionnaire: 5
 
 # The games list. Currently has one game called fortress.
 games:
