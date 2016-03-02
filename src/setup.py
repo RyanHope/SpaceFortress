@@ -21,7 +21,7 @@ plist = dict(
 )
 
 setup(
-    data_files=['gfx', 'fonts', 'sounds'],
+    data_files=['gfx', 'fonts', 'sounds', 'gui-theme'],
     options={'py2app': {'excludes': 'OpenGL', 'iconfile': 'PSF.icns', 'arch': 'i386'}},
     app=[
         dict(script="allinone_main.py", plist=plist),

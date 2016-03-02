@@ -63,6 +63,7 @@ class Game(object):
 
         self.bonus.flag = True
         self.collisions = []
+        self.money = 0
         # logging
         self.log = log.game_log(self.config['id'],self.config['datapath'],self.session_number,self.game_number)
 

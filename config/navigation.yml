@@ -15,6 +15,10 @@ global:
   # For experimenter's convenience, use the discrete condition
   condition: discrete
 
+  # When debugging is enabled, the left/right arrow keys will jump
+  # back/forward through the screens. Default value: 0
+  debug: 1
+
   # Specify the kind of screen used to display the task for the next
   # game. Possible options are: basic incremental
   task_screen: fmri

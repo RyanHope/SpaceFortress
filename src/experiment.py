@@ -6,6 +6,15 @@ from sfdialog import read_string, read_int, read_from_list
 import log
 import assets
 import sounds
+import sys
+
+class JumpToPreviousScreen (Exception):
+    def __init__(self):
+        pass
+
+class JumpToNextScreen (Exception):
+    def __init__(self):
+        pass
 
 class Experiment(object):
     def __init__(self):
@@ -36,8 +45,10 @@ class Experiment(object):
         if create_display:
             if fullscreen:
                 pygame.display.set_mode((1024, 768), pygame.FULLSCREEN)
+                self.fullscreen = True
             else:
                 pygame.display.set_mode((1024, 768))
+                self.fullscreen = False
             pygame.display.set_icon(pygame.image.load("gfx/psficon.png").convert_alpha())
             pygame.mouse.set_visible(False)
         assets.Assets.load()
@@ -59,19 +70,8 @@ class Experiment(object):
             if self.gc.raw_config['sessions'] != None:
                 self.gc['session'] = read_from_list("Choose the session:", screen, font, [ i+1 for i in self.gc.raw_config['sessions'] ])
 
-    # def prompt_for_simulation_keys(gc):
-    #     '''Simulation mode expects some extra keys to be present. prompt if missing.'''
-    #     if int(gc['simulate']):
-    #         screen = pygame.display.get_surface()
-    #         font = pygame.font.Font("fonts/freesansbold.ttf", 32)
-    #         if gc.has_key('game'):
-    #             gc['game'] = int(gc['game'])
-    #         else:
-    #             gc['game'] = read_int('Enter starting game number: ',screen,font)
-    #         if gc.has_key('speedup'):
-    #             gc['speedup'] = float(gc['speedup'])
-    #         else:
-    #             gc['speedup'] = read_int('Enter speedup value: ',screen,font)
+    def slog(self, action, args={}):
+        self.log._slog(self.current, self.screens[self.current].screen_name, action, args)
 
     def format_money(self, amount=None):
         if amount == None:
@@ -88,11 +88,58 @@ class Experiment(object):
     def prev_screen(self):
         self.jump_to_screen(self.current-1)
 
+    def handle_event(self, ev):
+        if ev.type == pygame.KEYDOWN:
+            if self.gc['debug']:
+                if ev.key == pygame.K_LEFT:
+                    self.slog('prev-screen')
+                    raise JumpToPreviousScreen()
+                elif ev.key == pygame.K_RIGHT:
+                    self.slog('next-screen')
+                    raise JumpToNextScreen()
+            if ev.key == pygame.K_ESCAPE:
+                self.screens[self.current].exit_prematurely()
+                sys.exit()
+            elif ev.key == pygame.K_f and (ev.mod&pygame.KMOD_ALT or ev.mod&pygame.KMOD_CTRL or ev.mod&pygame.KMOD_META):
+                self.fullscreen = not self.fullscreen
+                if self.fullscreen:
+                    pygame.display.set_mode((1024, 768), pygame.FULLSCREEN)
+                else:
+                    pygame.display.set_mode((1024, 768))
+                if hasattr(self.screens[self.current], 'draw') and callable(getattr(self.screens[self.current], 'draw')):
+                    self.screens[self.current].draw()
+                return True
+        elif ev.type == pygame.QUIT:
+            sys.exit()
+        return False
+
+    def delay_and_handle_events(self, ms):
+        start_time = pygame.time.get_ticks()
+        while pygame.time.get_ticks() - start_time < ms:
+            for event in pygame.event.get():
+                self.handle_event(event)
+            pygame.time.delay(50)
+
     def run(self):
         self.log.open_slog()
-        self.jump_to_screen(0)
+        self.log._slog(None, 'experiment', 'start', {'id': self.gc['id'],
+                                                     'condition': self.gc['condition'],
+                                                     'session': self.gc['session']})
+        self.current = 0
         while True:
-            self.next_screen()
+            try:
+                self.screens[self.current].run()
+                self.current += 1
+                if self.current >= len(self.screens):
+                    break
+            except JumpToPreviousScreen:
+                self.current = max(0, self.current-1)
+            except JumpToNextScreen:
+                self.current = min(len(self.screens)-1, self.current+1)
+        self.finish()
+
+    def finish(self):
+        self.log._slog(None, 'experiment', 'end', {'bonus': self.bonus});
         self.log.close_slog()
         sys.exit()
 

@@ -5,6 +5,7 @@ import sys
 import time
 import sounds
 import game
+import screen
 import log
 import config
 import missile
@@ -14,9 +15,10 @@ from assets import Assets
 
 import pygame_objects as pyobj
 
-class SDLGame(game.Game):
+class SDLGame(game.Game, screen.Screen):
     def __init__(self, conf, game_name, game_number):
-        super(self.__class__, self).__init__(conf, game_name, game_number)
+        screen.Screen.__init__(self, 'game')
+        game.Game.__init__(self, conf, game_name, game_number)
         # input
         self.key_bindings = {eval("pygame.K_%s"%self.config["key_bindings"]["thrust"]): 'thrust',
                              eval("pygame.K_%s"%self.config["key_bindings"]["left"]): 'left',
@@ -141,28 +143,29 @@ class SDLGame(game.Game):
         keys = []
         events = self.get_event()
         for event in events:
-            if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
-                keys.append([event.type, event.key, event.mod])
-            if event.type == pygame.KEYDOWN:
-                # self.keys_pressed[event.key] = True
-                if self.is_caret_key(event):
-                    self.log.add_event('got-caret')
-                if event.key in (pygame.K_LMETA, pygame.K_RMETA, pygame.K_LALT, pygame.K_RALT, pygame.K_TAB):
-                    print('PLEASE RETURN TO THE GAME IMMEDIATELY!!')
-                if event.key == pygame.K_ESCAPE:
-                    self.exit_prematurely()
-                elif event.key in self.key_bindings:
-                    self.press_key(self.key_bindings[event.key])
-                elif event.key == pygame.K_0:
-                    self.ship.auto_turn = not self.ship.auto_turn
-                elif event.key == pygame.K_9:
-                    self.ship.auto_thrust = not self.ship.auto_thrust
-                elif event.key == pygame.K_8:
-                    self.ship.auto_thrust_debug = not self.ship.auto_thrust_debug
-            if event.type == pygame.KEYUP:
-                # self.keys_pressed[event.key] = False
-                if event.key in self.key_bindings:
-                    self.release_key(self.key_bindings[event.key])
+            if exp.handle_event(event):
+                pass
+            else:
+                if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
+                    keys.append([event.type, event.key, event.mod])
+                if event.type == pygame.KEYDOWN:
+                    # self.keys_pressed[event.key] = True
+                    if self.is_caret_key(event):
+                        self.log.add_event('got-caret')
+                    if event.key == pygame.K_ESCAPE:
+                        self.exit_prematurely()
+                    elif event.key in self.key_bindings:
+                        self.press_key(self.key_bindings[event.key])
+                    elif event.key == pygame.K_0:
+                        self.ship.auto_turn = not self.ship.auto_turn
+                    elif event.key == pygame.K_9:
+                        self.ship.auto_thrust = not self.ship.auto_thrust
+                    elif event.key == pygame.K_8:
+                        self.ship.auto_thrust_debug = not self.ship.auto_thrust_debug
+                if event.type == pygame.KEYUP:
+                    # self.keys_pressed[event.key] = False
+                    if event.key in self.key_bindings:
+                        self.release_key(self.key_bindings[event.key])
         b = [self.tinc]
         b.append(keys)
         self.log.write_keys(b)
@@ -172,11 +175,11 @@ class SDLGame(game.Game):
         exp.bonus += self.money
 
     def run(self):
-        exp.log.slog('setup',{'condition': self.condition_name, 'session': self.session_number, 'game': self.game_name})
         self.load_display_assets()
         self.screen.fill((0,0,0))
         self.start()
-        exp.log.slog('begin')
+        exp.slog('start',{'name': self.game_name,
+                          'game-number': self.game_number})
         time = pygame.time.get_ticks()
         while True:
             now = pygame.time.get_ticks()
@@ -187,4 +190,4 @@ class SDLGame(game.Game):
             if self.cur_time >= int(self.config["game_time"]):
                 break
         self.finish()
-        exp.log.slog('end-game',{})
+        exp.slog('end')

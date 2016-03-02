@@ -17,6 +17,8 @@ def get_screen(name, game, game_list):
         return screens.basic_task()
     elif name == 'total-score':
         return screens.total_score(len(game_list), True, int(game.config['score_time']), 'continue', game)
+    elif name == 'questionnaire':
+        return screens.questionnaire()
     else:
         raise Exception('unknown screen "%s"'%name)
 
@@ -35,6 +37,8 @@ def gen_screens():
         for s in config.as_list(exp.gc,'post_game_screens'):
             exp.screens.append(get_screen(s, game, game_list))
         gnum += 1
+        if gnum % 5 == 0:
+            exp.screens.append(screens.questionnaire())
     exp.screens.append(screens.bonus())
 
 def start_sdl_experiment():

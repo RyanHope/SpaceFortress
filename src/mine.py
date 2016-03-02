@@ -86,7 +86,6 @@ class Mine(obj.Object):
 
     def kill(self):
         """Get rid of the mine. It hit the player, timed out, or got shot."""
-        self.app.log.slog('destroy-%s'%self.type())
         self.alive = False
         self.app.score.intrvl = 0
         self.app.score.iff = ""

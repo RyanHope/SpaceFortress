@@ -2,19 +2,22 @@ from __future__ import division
 import pygame
 import sys
 import drawing
-import experiment
-
+import screen
+from experiment import exp
 from assets import Assets
+
+from contrib import gui
 
 def format_money(amount):
     return "%d.%02d"%(amount/100,amount%100)
 
-class message(object):
-    def __init__(self, name, pause=False, duration=None):
+class message(screen.Screen):
+    def __init__(self, screen_name, pause=False, duration=None):
+        screen.Screen.__init__(self, screen_name)
+        # super(self.__class__, self).__init__(screen_name)
         self.f24 = Assets.f24
         self.f36 = Assets.f36
         self.screen = pygame.display.get_surface()
-        self.name = name
         self.pause = pause
         self.duration = duration
 
@@ -22,15 +25,15 @@ class message(object):
         self.draw()
         self.start()
         if self.pause:
-            pygame.time.delay(1000)
+            exp.delay_and_handle_events(1000)
         self.handle_events()
         self.end()
 
     def start(self):
-        experiment.exp.log.slog(self.name)
+        exp.slog('start')
 
     def end(self):
-        experiment.exp.log.slog(self.name + '-end')
+        exp.slog('end')
 
     def modifiers(self):
         return (pygame.K_NUMLOCK,
@@ -53,10 +56,10 @@ class message(object):
         self.start_time = pygame.time.get_ticks()
         while not self.duration or pygame.time.get_ticks() - self.start_time < self.duration:
             for event in pygame.event.get():
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        sys.exit()
-                    elif not event.key in self.modifiers():
+                if exp.handle_event(event):
+                    pass
+                elif event.type == pygame.KEYDOWN:
+                    if not event.key in self.modifiers():
                         return
             pygame.time.delay(1)
 
@@ -84,9 +87,8 @@ class instructions(message):
 
 class total_score(message):
     def __init__(self, gmax, pause, duration, continue_text, game):
-        super(self.__class__, self).__init__('show-total-score', pause, duration)
+        super(self.__class__, self).__init__('total-score', pause, duration)
         self.gmax = gmax
-        self.pause = pause
         self.ctext = continue_text
         self.game = game
 
@@ -101,36 +103,28 @@ class total_score(message):
         drawing.blit_text(self.screen,self.f24,title,y=100,valign='top',halign='center')
         drawing.blit_text(self.screen,self.f36,"You scored %d points."%self.game.get_total_score(),y=320,valign='top',halign='center')
         drawing.blit_text(self.screen,self.f36,"You earned a bonus of $%s this game."%format_money(self.game.money),y=370,valign='top',halign='center')
-        drawing.blit_text(self.screen,self.f36,"So far you have earned a total of $%s."%format_money(experiment.exp.bonus),y=420,valign='top',halign='center')
+        drawing.blit_text(self.screen,self.f36,"So far you have earned a total of $%s."%format_money(exp.bonus),y=420,valign='top',halign='center')
         self.continue_text(self.ctext).draw(self.screen,700,False)
         pygame.display.flip()
 
     def start(self):
-        score = {'total': self.game.get_total_score(), 'bonus': self.game.money, 'total-bonus': experiment.exp.bonus, 'raw-pnts': self.game.score.raw_pnts}
-        experiment.exp.log.slog('show-total-score', score)
+        score = {'game-number': self.game.game_number, 'total': self.game.get_total_score(), 'bonus': self.game.money, 'total-bonus': exp.bonus, 'raw-pnts': self.game.score.raw_pnts}
+        exp.slog('start', score)
 
     def end(self):
-        experiment.exp.log.slog('show-total-score-end')
+        exp.slog('end')
 
 class score(message):
-    def __init__(self,game, pause, continue_text, total_bonus):
+    def __init__(self, gmax, pause, duration, continue_text, game):
         """shows score for last game and waits to continue"""
-        super(total_score, self).__init__(pause)
-        self.pause = pause
-        self.continue_text = continue_text
-        self.total_bonus = total_bonus
+        super(total_score, self).__init__(gmax, pause, duration, continue_text, game)
 
     def start(self):
-        game.log.slog('show-score', score)
-        score['screen-type'] = 'score'
-        if not game.image and pause:
-            game.set_objects(score)
-            game.delay(1000)
-        game.set_objects(score)
-        game.delay_and_log(int(game.config['score_time']))
+        score = {'total': self.game.get_total_score(), 'bonus': self.game.money, 'total-bonus': exp.bonus, 'raw-pnts': self.game.score.raw_pnts}
+        exp.slog('start', score)
 
     def end(self):
-        game.log.slog('show-score-end')
+        exp.slog('end')
 
     def draw(self):
         total = 0
@@ -202,11 +196,11 @@ class bonus(message):
         super(bonus, self).__init__('bonus', False)
 
     def start(self):
-        obj = {'bonus': experiment.exp.bonus}
-        experiment.exp.log.slog(self.name, obj)
+        obj = {'bonus': exp.bonus}
+        exp.slog('start', obj)
 
     def draw(self):
-        drawing.fullscreen_message(self.screen,[drawing.text("You earned a $%s bonus!"%format_money(experiment.exp.bonus),self.f36,(255,255,0))],
+        drawing.fullscreen_message(self.screen,[drawing.text("You earned a $%s bonus!"%format_money(exp.bonus),self.f36,(255,255,0))],
                                    drawing.text("",self.f24))
         pygame.display.flip()
 
@@ -214,99 +208,81 @@ class bonus(message):
         pygame.event.clear()
         while True:
             event = pygame.event.wait()
-            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
-                sys.exit()
+            if exp.handle_event(event):
+                pass
+            elif event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+                return
 
-def display_screen(game,screen,continue_text,delay=False,total_bonus=None):
-    if screen == 'progress':
-        display_progress(game,continue_text)
-    elif screen == 'wait-for-caret':
-        display_wait(game,)
-    elif screen == 'fixation':
-        display_fixation(game,)
-    elif screen == 'instructions':
-        display_instructions(game,continue_text)
-    elif screen == 'foe-mines':
-        display_foe_mines(game,continue_text)
-    elif screen == 'fmri-task':
-        display_fmri_task(game,continue_text)
-    elif screen == 'incremental-task':
-        display_inc_task(game,continue_text)
-    elif screen == 'basic-task':
-        display_basic_task(game,continue_text)
-    elif screen == 'transfer-task':
-        display_transfer_task(game,continue_text)
-    elif screen == 'score':
-        show_score(game,delay, continue_text, total_bonus)
-    elif screen == 'total-score':
-        show_total_score(game,delay,continue_text, total_bonus)
-    elif screen == 'fixation':
-        display_fixation(game,)
-    elif screen != 'none':
-        display_screen_from_file(game,screen)
+class textarea(gui.TextArea):
+    def event(self,e):
+        if e.type == pygame.KEYDOWN and e.key == pygame.K_TAB:
+            if (e.mod&pygame.KMOD_SHIFT) == 0:
+                self.next()
+            else:
+                self.previous()
+            return True
+        return gui.TextArea.event(self, e)
 
-def pre_game_continue_text(game,last):
-    if last:
-        return continue_text("begin")
-    else:
-        return continue_text("continue")
+class questionnaire_desktop(gui.Desktop):
+    def event(self, ev):
+        if exp.handle_event(ev):
+            return True
+        else:
+            return gui.Desktop.event(self, ev)
 
-def display_pre_game_screens(game):
-    for n in xrange(len(game.pre_game_screens)):
-        screen = game.pre_game_screens[n]
-        last = n == len(game.pre_game_screens)-1
-        continue_text = game.pre_game_continue_text(last)
-        display_screen(game, screen, continue_text)
+class questionnaire(screen.Screen):
+    def __init__(self):
+        screen.Screen.__init__(self, 'questionnaire')
+        self.screen = pygame.display.get_surface()
 
-def post_game_continue_text(game,last,end):
-    if game.image:
-        return None
-    elif end:
-        if game.has_display():
-            return drawing.text("You're done! Press any key to exit",game.f24,(0,255,0))
-    elif last:
-        return continue_text('continue to next game')
-    else:
-        return continue_text('continue')
+    def click_continue(self):
+        self.done = True
 
-def display_post_game_screens(game, total_bonus):
-    end = game.game_number == game.games_in_session
-    for n in xrange(len(game.post_game_screens)):
-        screen = game.post_game_screens[n]
-        delay = n == 0
-        last = n == len(game.post_game_screens)-1
-        continue_text = game.post_game_continue_text(last,end)
-        game.display_screen(screen,continue_text,delay,total_bonus)
+    def quit(self):
+        sys.exit()
 
-def display_block_start_screens(game):
-    for screen in game.block_start_screens:
-        game.display_screen(screen,continue_text('continue'))
+    def add_question(self, c, query):
+        ta = textarea(width=450, height=100)
+        c.tr()
+        c.td(gui.Label(query, font=Assets.f24))
+        c.tr()
+        c.td(ta,border=3, style={'padding_bottom': 20})
+        return ta
 
-def display_block_end_screens(game):
-    for screen in game.block_end_screens:
-        game.display_screen(screen,continue_text('continue'))
+    def draw(self):
+        self.app.repaint()
 
-def display_session_screens(game):
-    for screen in game.session_start_screens:
-        display_screen(screen,continue_text('continue'))
+    def run(self):
+        exp.slog('start')
+        pygame.mouse.set_visible(True)
+        self.done = False
+        self.app = questionnaire_desktop(theme=gui.Theme('gui-theme'))
+        c = gui.Table(padding=20)
+        c.tr()
+        c.td(gui.Label('Please Answer the Following Questions',
+                       font=Assets.f36,
+                       color=(255,255,0)),
+             align=-1, style={"padding_bottom": 20})
+        strategy = self.add_question(c, "What is your overall strategy?")
+        thrust = self.add_question(c, "How do you decide when to thrust?")
+        turn = self.add_question(c, "How do you decide when to turn?")
+        shoot = self.add_question(c, "How do you decide when to shoot?")
 
-def pre_game(game):
-    if not game.simulate:
-        # pre game screens
-        if game.game_number == 1:
-            display_session_screens(game)
-        if game.games_per_block > 0 and game.game_number % game.games_per_block == 1:
-            display_block_start_screens(game)
-            game.log.slog('block-start',{'block':game.game_number//game.games_per_block+1})
-        display_pre_game_screens(game)
+        cont = gui.Button("Continue")
+        cont.connect(gui.CLICK, self.click_continue)
+        c.tr()
+        c.td(cont)
 
-def post_game(game, total_bonus):
-    '''Call this once the game is done.'''
-    if game.sounds_enabled:
-        pygame.mixer.stop()
-    # display screens
-    if not game.simulate:
-        display_post_game_screens(game, total_bonus)
-        if game.games_per_block > 0 and game.game_number % game.games_per_block == 0:
-            game.log.slog('block-end',{'block':game.game_number//game.games_per_block})
-            game.display_block_end_screens()
+        strategy.focus()
+
+        self.app.init(c, None)
+        while not self.done:
+            self.app.loop()
+            pygame.time.wait(5)
+
+        exp.slog('end', {'strategy': str(strategy.value),
+                         'thrust': str(thrust.value),
+                         'turn': str(turn.value),
+                         'shoot': str(shoot.value)})
+
+        pygame.mouse.set_visible(False)

@@ -14,7 +14,6 @@ class base(object):
 class session_log(base):
     def __init__(self, id, datapath, session_number):
         super(self.__class__, self).__init__(id, datapath, session_number)
-        self.game = 0
 
     def open_slog(self):
         self.sessionlog = open(os.path.join(self.datapath, '%s-%d.dat'%(self.id,self.session)),'a', 0)
@@ -22,12 +21,24 @@ class session_log(base):
     def close_slog(self):
         self.sessionlog.close()
 
-    def slog(self,string,args={}):
-        """Write a string to the session-wide log file with optional key/value pairs."""
+    def _slog(self, idx, screen_name, action, args):
+        """Write an entry to the session-wide log file with optional key/value pairs."""
         acc = []
         for k,v in args.iteritems():
-            acc.append("%s=%s"%(k,str(v).replace(' ','\ ')))
-        self.sessionlog.write("%f %d %s %s\n"%(time.time(),self.game,string, " ".join(acc)))
+            s = str(v)
+            if s.find("\n") >= 0:
+                s = s.replace('\n','\\n')
+            if s.count(' ') > 2:
+                s = s.replace('"', '\\"')
+                s = '"'+s+'"'
+            else:
+                s = s.replace(' ','\ ')
+            acc.append("%s=%s"%(k,s))
+        if idx == None:
+            idx = '-'
+        else:
+            idx = str(idx)
+        self.sessionlog.write("%f %s %s %s %s\n"%(time.time(), idx, screen_name, action, " ".join(acc)))
 
 class game_log(base):
     def __init__(self,id,datapath,session_number,game_num):
