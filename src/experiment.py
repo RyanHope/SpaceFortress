@@ -108,6 +108,7 @@ class Experiment(object):
                     pygame.display.set_mode((1024, 768))
                 if hasattr(self.screens[self.current], 'draw') and callable(getattr(self.screens[self.current], 'draw')):
                     self.screens[self.current].draw()
+                self.slog('toggle-fullscreen', {'state': self.fullscreen})
                 return True
         elif ev.type == pygame.QUIT:
             sys.exit()
