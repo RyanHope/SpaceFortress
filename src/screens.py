@@ -236,17 +236,38 @@ class questionnaire(screen.Screen):
         self.screen = pygame.display.get_surface()
 
     def click_continue(self):
-        self.done = True
+        if len(self.strategy.value) <= 0:
+            self.strategy.focus()
+        elif len(self.thrust.value) <= 0:
+            self.thrust.focus()
+        elif len(self.turn.value) <= 0:
+            self.turn.focus()
+        elif len(self.shoot.value) <= 0:
+            self.shoot.focus()
+        else:
+            self.done = True
 
     def quit(self):
         sys.exit()
 
+    def debug_keys_acceptable(self):
+        f = self.app.myfocus
+        while True:
+            if isinstance(f,gui.container.Container):
+                f = f.myfocus
+            else:
+                break
+        if isinstance(f, textarea):
+            return False
+        else:
+            return True
+
     def add_question(self, c, query):
-        ta = textarea(width=450, height=100)
+        ta = textarea(width=450, height=75)
         c.tr()
         c.td(gui.Label(query, font=Assets.f24))
         c.tr()
-        c.td(ta,border=3, style={'padding_bottom': 20})
+        c.td(ta,border=3, style={'padding_bottom': 15})
         return ta
 
     def draw(self):
@@ -263,26 +284,28 @@ class questionnaire(screen.Screen):
                        font=Assets.f36,
                        color=(255,255,0)),
              align=-1, style={"padding_bottom": 20})
-        strategy = self.add_question(c, "What is your overall strategy?")
-        thrust = self.add_question(c, "How do you decide when to thrust?")
-        turn = self.add_question(c, "How do you decide when to turn?")
-        shoot = self.add_question(c, "How do you decide when to shoot?")
+        self.strategy = self.add_question(c, "What is your overall strategy?")
+        self.thrust = self.add_question(c, "How do you decide when to thrust?")
+        self.turn = self.add_question(c, "How do you decide when to turn?")
+        self.shoot = self.add_question(c, "How do you decide when to shoot?")
+        self.thoughts = self.add_question(c, "Any other thoughts or comments?")
 
         cont = gui.Button("Continue")
         cont.connect(gui.CLICK, self.click_continue)
         c.tr()
         c.td(cont)
 
-        strategy.focus()
+        self.strategy.focus()
 
         self.app.init(c, None)
         while not self.done:
             self.app.loop()
             pygame.time.wait(5)
 
-        exp.slog('end', {'strategy': str(strategy.value),
-                         'thrust': str(thrust.value),
-                         'turn': str(turn.value),
-                         'shoot': str(shoot.value)})
+        exp.slog('end', {'strategy': str(self.strategy.value),
+                         'thrust': str(self.thrust.value),
+                         'turn': str(self.turn.value),
+                         'shoot': str(self.shoot.value),
+                         'thoughts': str(self.thoughts.value)})
 
         pygame.mouse.set_visible(False)

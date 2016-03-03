@@ -7,7 +7,6 @@ import log
 import assets
 import sounds
 import sys
-import sdl_game
 
 class JumpToPreviousScreen (Exception):
     def __init__(self):
@@ -91,7 +90,7 @@ class Experiment(object):
 
     def handle_event(self, ev):
         if ev.type == pygame.KEYDOWN:
-            if self.gc['debug']:
+            if self.gc['debug'] and self.screens[self.current].debug_keys_acceptable():
                 if ev.key == pygame.K_LEFT:
                     self.slog('prev-screen')
                     raise JumpToPreviousScreen()
@@ -102,8 +101,7 @@ class Experiment(object):
                     self.gc['sounds'] = not self.gc['sounds']
                     self.slog('toggle-sound', {'state': self.gc['sounds']})
                     for s in self.screens:
-                        if isinstance(s, sdl_game.SDLGame):
-                            s.sounds_enabled = self.gc['sounds']
+                        s.debug_set_sounds(self.gc['sounds'])
                     return True
             if ev.key == pygame.K_ESCAPE:
                 self.screens[self.current].exit_prematurely()

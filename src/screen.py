@@ -5,3 +5,9 @@ class Screen(object):
 
     def exit_prematurely(self):
         pass
+
+    def debug_keys_acceptable(self):
+        return True
+
+    def debug_set_sounds(self, val):
+        pass

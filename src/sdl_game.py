@@ -132,6 +132,9 @@ class SDLGame(game.Game, screen.Screen):
                                                 event.mod&pygame.KMOD_RSHIFT or
                                                 event.mod&pygame.KMOD_SHIFT))
 
+    def debug_set_sounds(self, val):
+        self.sounds_enabled = val
+
     def exit_prematurely(self):
         self.log.log_premature_exit()
         self.log.close_gamelogs()
