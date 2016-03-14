@@ -12,6 +12,10 @@
 # game section shadow the session setting and, therefore, the global
 # setting.
 global:
+  # When debugging is enabled, the left/right arrow keys will jump
+  # back/forward through the screens. Default value: 0
+  debug: 0
+
   # Specify the kind of screen used to display the task for the next
   # game. Possible options are: basic incremental
   task_screen: fmri
@@ -338,6 +342,10 @@ global:
   pre_game_screens: basic-task
 
   post_game_screens: total-score
+
+  # Add the questionnaire screen every specified number of
+  # games. Default value: None.
+  questionnaire: ~
 
   # Set how many games are included in a scan block. 0 means there are no blocks.
   # default value: 0
