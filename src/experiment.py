@@ -103,7 +103,7 @@ class Experiment(object):
                     for s in self.screens:
                         s.debug_set_sounds(self.gc['sounds'])
                     return True
-            if ev.key == pygame.K_ESCAPE:
+            if ev.key == pygame.K_ESCAPE and self.gc['debug']:
                 self.screens[self.current].exit_prematurely()
                 sys.exit()
             elif ev.key == pygame.K_f and (ev.mod&pygame.KMOD_ALT or ev.mod&pygame.KMOD_CTRL or ev.mod&pygame.KMOD_META):

@@ -155,8 +155,6 @@ class SDLGame(game.Game, screen.Screen):
                     # self.keys_pressed[event.key] = True
                     if self.is_caret_key(event):
                         self.log.add_event('got-caret')
-                    if event.key == pygame.K_ESCAPE:
-                        self.exit_prematurely()
                     elif event.key in self.key_bindings:
                         self.press_key(self.key_bindings[event.key])
                     elif event.key == pygame.K_0:

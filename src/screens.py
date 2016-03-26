@@ -210,7 +210,7 @@ class bonus(message):
             event = pygame.event.wait()
             if exp.handle_event(event):
                 pass
-            elif event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+            elif event.type == pygame.QUIT or (exp.gc['debug'] and event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 return
 
 class textarea(gui.TextArea):
