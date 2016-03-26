@@ -128,6 +128,7 @@ def parse_command_line():
     parser.add_argument('--config-dir',help="Specify where the config files are located",default="config")
     parser.add_argument('--config',help="Specify which config file to load config from",default="space-fortress")
     parser.add_argument('--data', metavar="DIR", help="Specify the data directory")
+    parser.add_argument('--debug', help="Turn on debug keys bindings", action='store_true')
     parser.add_argument('--display-level', metavar="N", help="set the display level (0=no display, 1=minimal, 2=full)",type=int)
     parser.add_argument('--model-port', metavar="PORT", type=int, help="Specify the port to listen on for model clients")
     parser.add_argument('--id', help="Specify the subject ID")
@@ -156,4 +157,6 @@ def get_global_config():
         gc['condition'] = args.condition
     if args.game:
         gc['game'] = args.game
+    if args.debug:
+        gc['debug'] = 1
     return gc

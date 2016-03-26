@@ -12,12 +12,12 @@
 # game section shadow the session setting and, therefore, the global
 # setting.
 global:
-  # For experimenter's convenience, use the discrete condition
+  # For experimenter's convenience, use the newest condition
   condition: questionnaire
 
   # When debugging is enabled, the left/right arrow keys will jump
   # back/forward through the screens. Default value: 0
-  debug: 1
+  debug: 0
 
   # Specify the kind of screen used to display the task for the next
   # game. Possible options are: basic incremental
