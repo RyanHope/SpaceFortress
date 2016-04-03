@@ -65,7 +65,7 @@ class Game(object):
         self.ret = 1
 
         self.reactor = reactor
-        
+
         self.STATE_UNKNOWN = -3
         self.STATE_WAIT_CONNECT = -2
         self.STATE_WAIT_MODEL = -1
@@ -103,7 +103,7 @@ class Game(object):
             self.modifier = pygame.KMOD_META
 
         self.plugins = {}
-        self.plugins = defaults.load_plugins(self, 'plugins', self.plugins)
+        self.plugins = defaults.load_plugins(self, os.path.join(os.path.dirname(os.path.abspath(__file__)),"../plugins"), self.plugins)
         self.plugins = defaults.load_plugins(self, defaults.get_plugin_home(), self.plugins)
         for name in self.plugins:
             if hasattr(self.plugins[name], 'eventCallback'):
@@ -126,9 +126,9 @@ class Game(object):
 
         pygame.display.init()
         pygame.font.init()
-        
+
         pygame.event.set_blocked((pygame.MOUSEMOTION, pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN))
-        
+
         mode_list = pygame.display.list_modes()
         if self.config['Display']['display_mode'] == 'Windowed':
             if self.config['Display']['screen_width'] > 0 and self.config['Display']['screen_height'] > 0:
@@ -198,7 +198,7 @@ class Game(object):
             self.WORLD_WIDTH = int(710 * self.aspect_ratio)
             self.WORLD_HEIGHT = int(626 * self.aspect_ratio)
         self.linewidth = self.config['Display']['linewidth']
-        
+
         self.stars = []
 
         self.kp_space = self.linewidth
@@ -210,7 +210,7 @@ class Game(object):
         self.kp_points = self.linewidth
 
         self.fh = int(self.SCREEN_HEIGHT / 72)
-        
+
         self.fp = pkg_resources.resource_stream('resources', 'fonts/freesansbold.ttf')
         self.font1 = pygame.font.Font(self.fp, int(self.SCREEN_HEIGHT / 10))
         self.fp.seek(0)
@@ -251,7 +251,7 @@ class Game(object):
         if self.config['General']['sound']:
             pygame.mixer.init()
             pygame.mixer.set_num_channels(32)
-        
+
         self.snd_shell_fired = Sound(self, pkg_resources.resource_stream("resources", "sounds/shellfired.wav"))
         self.snd_missile_fired = Sound(self, pkg_resources.resource_stream("resources", "sounds/missilefired.wav"))
         self.snd_explosion = Sound(self, pkg_resources.resource_stream("resources", "sounds/expfort.wav"))
@@ -260,7 +260,7 @@ class Game(object):
         self.snd_bonus_success = Sound(self, pkg_resources.resource_stream("resources", "sounds/bonus_success.wav"))
         self.snd_bonus_fail = Sound(self, pkg_resources.resource_stream("resources", "sounds/bonus_fail.wav"))
         self.snd_empty = Sound(self, pkg_resources.resource_stream("resources", "sounds/emptychamber.wav"))
-        
+
         if self.config['Display']['display_mode'] == 'Fullscreen' or self.config['Display']['display_mode'] == 'Current':
             self.screen = pygl2d.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.FULLSCREEN | pygame.DOUBLEBUF)
         elif self.config['Display']['display_mode'] == 'Fake Fullscreen':
@@ -299,7 +299,7 @@ class Game(object):
             self.explosion_rect = self.explosion.get_rect()
             self.explosion_small = pygl2d.image.Image(pkg_resources.resource_stream("resources", 'gfx/exp.png'))
             self.explosion_small_rect = self.explosion_small.get_rect()
-        
+
         self.world = pygame.rect.Rect(0, 0, self.WORLD_WIDTH, self.WORLD_HEIGHT)
         self.world.center = (self.SCREEN_WIDTH / 2, self.SCREEN_HEIGHT / 2)
         if not self.config['Score']['new_scoring_pos']:
@@ -317,19 +317,19 @@ class Game(object):
 
         self.dmod = -1
         self.smod = -1
-        
+
         self.intro_title = pygl2d.font.RenderText(get_psf_version_string(), (255, 200, 100), self.font1)
         self.intro_title_rect = self.intro_title.get_rect()
         self.intro_title_rect.center = (self.SCREEN_WIDTH / 2, self.SCREEN_HEIGHT / 5)
-        
+
         self.intro_vers = pygl2d.font.RenderText('Version: %s' % (__version__), (255, 200, 100), self.font2)
         self.intro_vers_rect = self.intro_vers.get_rect()
         self.intro_vers_rect.center = (self.SCREEN_WIDTH / 2, 4 * self.SCREEN_HEIGHT / 5 - self.fh / 2 - 2)
-        
+
         self.intro_copy = pygl2d.font.RenderText('Copyright \xa92011 CogWorks Laboratory, Rensselaer Polytechnic Institute', (255, 200, 100), self.font2)
         self.intro_copy_rect = self.intro_copy.get_rect()
         self.intro_copy_rect.center = (self.SCREEN_WIDTH / 2, 4 * self.SCREEN_HEIGHT / 5 + self.fh / 2 + 2)
-        
+
         self.intro_logo = pygl2d.image.Image(pkg_resources.resource_stream("resources", 'gfx/psf5.png'))
         self.intro_logo_rect = self.intro_logo.get_rect()
         self.intro_logo_rect.center = (self.SCREEN_WIDTH / 2, self.SCREEN_HEIGHT / 2)
@@ -338,7 +338,7 @@ class Game(object):
         self.pause = pygl2d.font.RenderText("Paused!", (255, 255, 255), self.f96)
         self.pause_rect = self.pause.get_rect()
         self.pause_rect.center = (self.SCREEN_WIDTH / 2, self.SCREEN_HEIGHT / 2)
-        
+
         self.happy = pygl2d.image.load_xbm(pkg_resources.resource_stream("resources", "gfx/fill1.xbm"))
         self.gameevents.add("session", "ready", type='EVENT_SYSTEM')
 
@@ -358,9 +358,9 @@ class Game(object):
         self.missile_list = MissileList(self)
         self.shell_list = ShellList(self)
         self.ship = Ship(self)
-        
+
         self.gametimer.reset()
-        
+
         if self.config['Fortress']['fortress_exists']:
             self.fortress = Fortress(self)
             self.fortress_exists = True
@@ -370,7 +370,7 @@ class Game(object):
             self.bonus = Bonus(self)
             self.bonus_exists = True
         else:
-            self.bonus_exists = False       
+            self.bonus_exists = False
 
         self.destroyedFortresses = 0
         self.totalMines = 0
@@ -391,7 +391,7 @@ class Game(object):
         self.score.bonus = 0
         self.score.vlner = 0
         self.score.shots = self.config['Missile']['missile_num']
-        
+
         self.flighttimer.reset()
         self.mine_list.timer.reset()
         if self.config['Graphics']['parallax_mode'] == 'Fortress':
@@ -481,10 +481,10 @@ class Game(object):
                                 self.gameevents.add("press", "pause", type='EVENT_USER')
                         else:
                             self.gameevents.add("press", event.key, "user", type='EVENT_SYSTEM')
-                                
+
                     elif self.state == self.STATE_PAUSED and event.key == self.pause_key:
                         self.gameevents.add("press", "unpause", type='EVENT_USER')
-                                
+
                     else:
                         self.gameevents.add("press", event.key, "user", type='EVENT_SYSTEM')
 
@@ -541,7 +541,7 @@ class Game(object):
             s = (self.SCREEN_WIDTH - (n + (n-1)/2) * w) / 2 + w/2
             for i in range(0,n):
                 self.foe_letters[i][1].center = (s + i*1.5*w,self.SCREEN_HEIGHT / 2)
-            
+
             self.foe_midbot = pygl2d.font.RenderText("Try to memorize them before proceeding", (255, 255, 0), self.f24)
             self.foe_midbot_rect = self.foe_midbot.get_rect()
             self.foe_midbot_rect.center = (self.SCREEN_WIDTH / 2, 500 * self.aspect_ratio)
@@ -1040,10 +1040,10 @@ class Game(object):
         pygl2d.draw.points2(stars[1], (190, 190, 190), 2)
         pygl2d.draw.points2(stars[2], (255, 255, 255), 3)
 
-    def draw_world(self):       
+    def draw_world(self):
         if self.config['Graphics']['max_stars']:
             self.draw_stars()
-            
+
         if not self.config['Hexagon']['hide_big_hex']:
             self.bighex.draw()
         if self.fortress_exists and not self.fortress.alive:
@@ -1051,7 +1051,7 @@ class Game(object):
         else:
             if not self.config['Hexagon']['hide_small_hex']:
                 self.smallhex.draw()
-        
+
         for shell in self.shell_list:
             shell.draw()
         if self.fortress_exists:
@@ -1073,21 +1073,21 @@ class Game(object):
 
     def draw(self):
         """draws the world"""
-        
+
         pygl2d.display.begin_draw(self.screen_size)
-        
+
         if self.state == self.STATE_INTRO:
             self.draw_intro()
-            
+
         elif self.state == self.STATE_GAMENO:
             self.draw_game_number()
-            
+
         elif self.state == self.STATE_IFF:
             self.draw_foe_mines()
-            
+
         elif self.state == self.STATE_PLAY or self.state == self.STATE_PAUSED:
             if self.state == self.STATE_PAUSED and self.config['Display']['pause_overlay']:
-                self.draw_pause_overlay()            
+                self.draw_pause_overlay()
             else:
                 pygl2d.draw.polygon([self.screen_rect.topleft, self.screen_rect.topright, self.screen_rect.bottomright, self.screen_rect.bottomleft], (64, 64, 64), stipple_pattern=self.happy[::-1])
                 self.frame.draw()
@@ -1099,7 +1099,7 @@ class Game(object):
             self.draw_scores()
 
         self.gameevents.add("display", 'preflip', 'main', False, type='EVENT_SYSTEM')
-        
+
         pygl2d.display.end_draw()
 
     def log_world(self):
@@ -1231,11 +1231,11 @@ class Game(object):
         self.intro_logo.draw(self.intro_logo_rect.topleft)
 
     def draw_game_number(self):
-        """before game begins, present the game number"""        
+        """before game begins, present the game number"""
         self.game_title.draw(self.game_title_rect.topleft)
         pygl2d.draw.line((self.SCREEN_WIDTH / 4 , self.SCREEN_HEIGHT / 16 * 8.5), (self.SCREEN_WIDTH / 4 * 3, self.SCREEN_HEIGHT / 16 * 8.5), (255, 255, 255))
         pygl2d.draw.line((self.SCREEN_WIDTH / 4 , self.SCREEN_HEIGHT / 16 * 5.5), (self.SCREEN_WIDTH / 4 * 3, self.SCREEN_HEIGHT / 16 * 5.5), (255, 255, 255))
-        
+
     def draw_foe_mines(self):
         """before game begins, present the list of IFF letters to target"""
         self.foe_top.draw(self.foe_top_rect.topleft)
@@ -1334,7 +1334,7 @@ class Game(object):
         pntsnrect = pntsnsurf.get_rect()
         pntsnrect.right = self.SCREEN_WIDTH / 3 * 2
         pntsnrect.centery = self.SCREEN_HEIGHT / 16 * 4
-        pntsnsurf.draw(pntsnrect.topleft)      
+        pntsnsurf.draw(pntsnrect.topleft)
         deathsurf = pygl2d.font.RenderText("Deaths:", (255, 255, 0), self.f24)
         deathrect = deathsurf.get_rect()
         deathrect.left = self.SCREEN_WIDTH / 3
@@ -1547,8 +1547,7 @@ class Game(object):
         self.lc = LoopingCall(self.refresh)
         cleanupD = self.lc.start(1.0 / self.fps)
         cleanupD.addCallbacks(self.quit)
-        
+
     def run(self):
         reactor.callLater(0, self.start)
         reactor.run()
-    

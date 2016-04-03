@@ -3,7 +3,7 @@ Cogworks Subject Info
 """
 
 try:
-    
+
     import sys, os
 
     from PySide.QtCore import *
@@ -59,3 +59,4 @@ try:
 
 except ImportError as e:
     sys.stderr.write("Failed to load 'CWSubject' plugin, missing dependencies. [%s]\n" % e)
+    sys.stderr.flush()
