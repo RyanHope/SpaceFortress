@@ -20,9 +20,9 @@
 from itertools import count
 
 class Chunk(object):
-    
+
     _ids = count(0)
-    
+
     def __init__(self, name, isa, **slots):
         self._id = self._ids.next()
         if name == None:
@@ -31,7 +31,7 @@ class Chunk(object):
             self.name = name
         self.isa = isa
         self.slots = slots
-        
+
     def get_chunk(self, name=None, isa=None, empty=False):
         if name == None:
             name = str(self.name)
@@ -87,11 +87,10 @@ class VisualChunk(Chunk):
         return chunk
 
 class PAAVChunk(VisualChunk):
-    
+
     def get_visual_location(self):
         chunk = super(PAAVChunk, self).get_visual_location()
         for s, v in self.slots.iteritems():
             if s in ["fcolor", "fshape", "fsize", "fshading", "forient"]:
                 chunk["slots"][s] = v
         return chunk
-    

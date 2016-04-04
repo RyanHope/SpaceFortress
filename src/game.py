@@ -520,6 +520,14 @@ class Game(object):
                 self.game_title_rect.center = (self.SCREEN_WIDTH / 2, self.SCREEN_HEIGHT / 16 * 7)
                 self.setState(self.STATE_GAMENO)
                 self.gameevents.add("display_game", self.current_game)
+            elif self.config['General']['games_per_session']==0:
+                self.current_game += 1
+                self.game_title = "Game: %d" % (self.current_game)
+                self.game_title = pygl2d.font.RenderText(self.game_title, (255, 255, 0), self.f36)
+                self.game_title_rect = self.game_title.get_rect()
+                self.game_title_rect.center = (self.SCREEN_WIDTH / 2, self.SCREEN_HEIGHT / 16 * 7)
+                self.setState(self.STATE_GAMENO)
+                self.gameevents.add("display_game", self.current_game)
             else:
                 self.setState(self.STATE_DONE)
                 self.ret = 0

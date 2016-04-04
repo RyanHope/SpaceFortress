@@ -189,10 +189,11 @@ try:
 			print("Connection Made")
 			self.app.setState(self.app.STATE_WAIT_MODEL)
 			self.app.current_game = 0
+			self.actr.setup(self.app.screen_size[0], self.app.screen_size[1])
 
 		@d.listen('connectionLost')
 		def ACTR6_JNI_Event(self, model, params):
-			print("Connection Lost")
+			print("Connection Lost", params)
 			self.app.setState(self.app.STATE_WAIT_CONNECT)
 
 		@d.listen('reset')
@@ -203,10 +204,9 @@ try:
 
 		@d.listen('model-run')
 		def ACTR6_JNI_Event(self, model, params):
-			print ("model-run")
 			if params['resume']:
 				self.resume = True
-				self.app.setState(self.app.STATE_PLAY)
+				self.app.setState(self.oldstate)
 				self.app.gametimer.unpause()
 			else:
 				self.actr.add_dm(Chunk("game-settings","game-settings",mines=self.app.mine_exists))
@@ -215,8 +215,8 @@ try:
 
 		@d.listen('model-stop')
 		def ACTR6_JNI_Event(self, model, params):
-			print("model-stop")
 			self.app.gametimer.pause()
+			self.oldstate = self.app.state
 			self.app.setState(self.app.STATE_PAUSED)
 
 		@d.listen('hold-finger')
@@ -274,5 +274,5 @@ try:
 			pass # No mouse in Space Fortress
 
 except ImportError as e:
-    sys.stderr.write("Failed to load 'ACT-R JNI' plugin, missing dependencies. [%s]\n" % e)
-    sys.stderr.flush()
+	sys.stderr.write("Failed to load 'ACT-R JNI' plugin, missing dependencies. [%s]\n" % e)
+	sys.stderr.flush()

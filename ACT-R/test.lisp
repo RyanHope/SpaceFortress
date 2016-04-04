@@ -1,0 +1,6 @@
+(asdf:load-system 'actr)
+(clear-all)
+(define-model spacefortress)
+(sgp :jni-hostname "127.0.0.1" :jni-port 5555 :jni-sync t)
+(send-raw (get-module json-network-interface) (jsown:to-json (jsown:new-js ("model" "SPACEFORTRESS") ("method" "sync") ("params" nil))))
+(send-raw (get-module json-network-interface) (jsown:to-json (jsown:new-js ("model" "SPACEFORTRESS") ("method" "modelRun") ("params" (jsown:new-js ("resume" (running (get-module json-network-interface))))))))
