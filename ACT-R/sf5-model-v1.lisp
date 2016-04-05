@@ -8,7 +8,7 @@
 (defmacro defp* (&rest body)
   `(p*-fct ',body))
 
-(defun run-until-break (&key (real-time nil))
+(defun run-until-break (&key (real-time t))
   (run-until-condition (lambda () nil) :real-time real-time))
 
 (defun degrees (x) (* x (/ 180 pi)))
@@ -28,7 +28,7 @@
 (define-model spacefortress)
 
 (jni-register-event-hook :break (lambda () (schedule-break-after-all)))
-	
+
 (sgp :jni-hostname "localhost" :jni-port 5555 :jni-sync t)
 
 (sgp :needs-mouse nil
@@ -197,7 +197,7 @@
 (defp find-mine-letters
  =goal> isa study-mine-letters state nil
 
-==> 
+==>
  +visual-location> isa visual-location :attended nil kind text color "white"  < width 50
  +imaginal> isa mine-letters
  =goal> state find
@@ -208,7 +208,7 @@
  =goal> isa study-mine-letters state find
  ?visual-location> state error
 ==>
- 
+
  +visual-location> isa visual-location :attended nil kind text color "white"  < width 50)
 
 (defp read-letter
@@ -224,7 +224,7 @@
  =visual> isa text value =l
  =imaginal> isa mine-letters letter1 nil
 ==>
- 
+
  +visual-location> isa visual-location kind text :attended nil color "white" < width 50
  =imaginal> letter1 =l
  =goal> state find)
@@ -252,8 +252,3 @@
  -imaginal>
  +manual> isa delayed-punch hand right finger pinky
  +goal> isa monitor)
-
-
- 
-
- 

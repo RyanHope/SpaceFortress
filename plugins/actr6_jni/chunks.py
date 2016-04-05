@@ -23,21 +23,21 @@ class Chunk(object):
 
     _ids = count(0)
 
-    def __init__(self, name, isa, **slots):
+    def __init__(self, name, kind, **slots):
         self._id = self._ids.next()
         if name == None:
             self.name = "vc%d" % self._id
         else:
             self.name = name
-        self.isa = isa
+        self.kind = kind
         self.slots = slots
 
-    def get_chunk(self, name=None, isa=None, empty=False):
+    def get_chunk(self, name=None, kind=None, empty=False):
         if name == None:
             name = str(self.name)
-        if isa == None:
-            isa = self.isa
-        chunk = {"name": name, "isa": isa, "slots": {}}
+        if kind == None:
+            kind = self.kind
+        chunk = {"name": name, "kind": kind, "slots": {}}
         if not empty:
             for s, v in self.slots.iteritems():
                 chunk["slots"][s] = v
@@ -45,8 +45,8 @@ class Chunk(object):
 
 class VisualChunk(Chunk):
 
-    def __init__(self, name, isa, screenx, screeny, width = None, height = None, color = None, size = None, value = None, **slots):
-        super(VisualChunk, self).__init__(name, isa, **slots)
+    def __init__(self, name, kind, screenx, screeny, width = None, height = None, color = None, size = None, value = None, **slots):
+        super(VisualChunk, self).__init__(name, kind, **slots)
         self.screenx = screenx
         self.screeny = screeny
         self.width = width
@@ -67,11 +67,11 @@ class VisualChunk(Chunk):
             chunk["slots"]["value"] =  self.value
         return chunk
 
-    def get_visual_location(self, isa=None):
-        if isa == None:
-            isa = "visual-location"
-        chunk = super(VisualChunk, self).get_chunk(name="%s-loc" % str(self.name), isa=isa, empty=True)
-        chunk["slots"]["kind"] = ":%s" % self.isa
+    def get_visual_location(self, kind=None):
+        if kind == None:
+            kind = "visual-location"
+        chunk = super(VisualChunk, self).get_chunk(name="%s-loc" % str(self.name), kind=kind, empty=True)
+        chunk["slots"]["kind"] = ":%s" % self.kind
         chunk["slots"]["screen-x"] = self.screenx
         chunk["slots"]["screen-y"] = self.screeny
         if self.width:
@@ -84,13 +84,4 @@ class VisualChunk(Chunk):
             chunk["slots"]["size"] = self.size
         if self.value:
             chunk["slots"]["value"] =  self.value
-        return chunk
-
-class PAAVChunk(VisualChunk):
-
-    def get_visual_location(self):
-        chunk = super(PAAVChunk, self).get_visual_location()
-        for s, v in self.slots.iteritems():
-            if s in ["fcolor", "fshape", "fsize", "fshading", "forient"]:
-                chunk["slots"][s] = v
         return chunk

@@ -127,9 +127,12 @@ class Score(object):
         """updates positions list to reflect current scores"""
         positions = [0] * 8
         if self.app.config['General']['next_gen']:
-            time = (self.app.config['General']['game_time'] - self.app.gametimer.elapsed()) / 1000.0
-            if (time < 0): time = 0
-            positions[1] = "%.1f" % time
+            if self.app.config['General']['game_time'] > 0:
+                time = (self.app.config['General']['game_time'] - self.app.gametimer.elapsed()) / 1000.0
+                if (time < 0): time = 0
+                positions[1] = "%.1f" % time
+            else:
+                positions[1] = "Inf"
             positions[0] = "%d" % self.pnts
             positions[2] = self.shots
             if self.intrvl == 0:
@@ -158,7 +161,7 @@ class Score(object):
 
         for i,v in enumerate(positions):
             if positions[i] != self.positions[i]:
-                self.positions[i] = positions[i] 
+                self.positions[i] = positions[i]
                 self.scores_texts[i] = pygl2d.font.RenderText("%s" % str(self.positions[i]), (255, 255, 0), self.f)
                 self.scores_rects[i] = self.scores_texts[i].get_rect()
                 self.scores_rects[i].center = self.scores_locations[i]
@@ -169,7 +172,7 @@ class Score(object):
         self.update_score()
         for i,v in enumerate(self.scores_texts):
             if v: v.draw(self.scores_rects[i].topleft)
-        
+
         return
         #print self.positions
         p1_surf = pygl2d.font.RenderText("%s" % str(self.positions[1]), (255, 255, 0), self.f)

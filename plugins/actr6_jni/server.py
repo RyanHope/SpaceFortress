@@ -1,7 +1,7 @@
 # -*- coding:	utf-8 -*-
 #===============================================================================
 # This file is part of ACTR6_JNI.
-# Copyright (C) 2012-2013 Ryan Hope <rmh3093@gmail.com>
+# Copyright (C) 2012-2016 Ryan Hope <rmh3093@gmail.com>
 #
 # ACTR6_JNI is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -34,8 +34,6 @@ class ACTR_Protocol(LineReceiver):
 			d.trigger(e="connectionLost", model=None, params=reason)
 
 	def lineReceived(self, string):
-		sys.stdout.write("%s\n" % string)
-		sys.stdout.flush()
 		obj = json.loads(string)
 		if obj['method'] == 'set-mp-time':
 			if self.factory.clock:
@@ -89,6 +87,20 @@ class JNI_Server(Factory):
 		args = {"loc-chunks": visual_locations,
 				"obj-chunks": visual_objects}
 		self.p.sendCommand(self.model, "display-new", **args)
+
+	def object_add(self, chunks):
+		visual_locations = [chunk.get_visual_location() for chunk in chunks]
+		visual_objects = [chunk.get_visual_object() for chunk in chunks]
+		args = {"loc-chunks": visual_locations,
+				"obj-chunks": visual_objects}
+		self.p.sendCommand(self.model, "object-add", **args)
+
+	def object_update(self, chunks, clear=False):
+		chunks = [chunk.get_visual_location() for chunk in chunks] + [chunk.get_visual_object() for chunk in chunks]
+		self.p.sendCommand(self.model, "object-update", chunks=chunks, clear=clear)
+
+	def object_delete(self):
+		self.p.sendCommand(self.model, "object-delete")
 
 	def display_add(self, chunk):
 		visual_location = chunk.get_visual_location()

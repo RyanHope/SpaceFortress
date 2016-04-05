@@ -11,6 +11,12 @@ try:
 	import pygl2d
 	import webcolors
 
+	SDLK_SCANCODE_MASK = 1 << 30
+
+	def SDL_SCANCODE_TO_KEYCODE(x):
+	    """Converts the passed scancode to a keycode value."""
+	    return x | SDLK_SCANCODE_MASK
+
 	class TokenChunk(VisualChunk):
 		def get_visual_location(self):
 			chunk = super(TokenChunk, self).get_visual_location("token-location")
@@ -27,40 +33,40 @@ try:
 					chunk["slots"][s] = v
 			return chunk
 
-	def RenderTextToChunk(name, text, rect):
+	def RenderTextToChunk(name, text, rect, **kwargs):
 		return VisualChunk(name, "text", rect.centerx, rect.centery,
 						rect.width, rect.height, webcolors.rgb_to_name(text.color),
-						value=text.text)
+						value=text.text, **kwargs)
 
-	def ShipToChunk(ship):
+	def ShipToChunk(ship, **kwargs):
 		return TokenChunk("ship", "ship", ship.position.x, ship.position.y,
 						ship.get_width(), ship.get_height(), color="yellow",
-						orientation=ship.orientation, velocity=ship.get_velocity())
+						orientation=ship.orientation, velocity=ship.get_velocity(), **kwargs)
 
-	def FortressToChunk(fortress):
+	def FortressToChunk(fortress, **kwargs):
 		return TokenChunk("fortress", "fortress", fortress.position.x, fortress.position.y,
 						fortress.get_width(), fortress.get_height(), color="yellow",
-						orientation=fortress.orientation, velocity=fortress.get_velocity())
+						orientation=fortress.orientation, velocity=fortress.get_velocity(), **kwargs)
 
-	def ShellToChunk(shell):
+	def ShellToChunk(shell, **kwargs):
 		return TokenChunk("shell%d" % shell._id, "shell", shell.position.x, shell.position.y,
 						shell.get_width(), shell.get_height(), color="red",
-						orientation=shell.orientation, velocity=shell.get_velocity())
+						orientation=shell.orientation, velocity=shell.get_velocity(), **kwargs)
 
-	def MissileToChunk(missile):
+	def MissileToChunk(missile, **kwargs):
 		return TokenChunk("missile%d" % missile._id, "missile", missile.position.x, missile.position.y,
 						missile.get_width(), missile.get_height(), color="red",
-						orientation=missile.orientation, velocity=missile.get_velocity())
+						orientation=missile.orientation, velocity=missile.get_velocity(), **kwargs)
 
-	def MineToChunk(mine):
+	def MineToChunk(mine, **kwargs):
 		return TokenChunk("mine%d" % mine._id, "mine", mine.position.x, mine.position.y,
 						mine.get_width(), mine.get_height(), color="red",
-						orientation=mine.orientation, velocity=mine.get_velocity())
+						orientation=mine.orientation, velocity=mine.get_velocity(), **kwargs)
 
-	def RectToChunk(rect, name, isa, color):
+	def RectToChunk(rect, name, isa, color, **kwargs):
 		return RectChunk(name, isa, rect.centerx, rect.centery, rect.width, rect.height,
 						top=rect.top, bottom=rect.bottom, left=rect.left, right=rect.right,
-						color=color)
+						color=color, **kwargs)
 
 	class SF5Plugin(object):
 
@@ -109,7 +115,7 @@ try:
 					if args[4] == 'setstate':
 
 						if args[5] == self.app.STATE_GAMENO:
-							self.actr.display_new([RenderTextToChunk(None,self.app.game_title,self.app.game_title_rect)])
+							self.actr.display_new([RenderTextToChunk(None,self.app.game_title,self.app.game_title_rect,number=self.app.current_game)])
 						elif args[5] == self.app.STATE_IFF:
 							chunks = [RenderTextToChunk(None,foe[0],foe[1]) for foe in self.app.foe_letters]
 							chunks += [
@@ -209,7 +215,7 @@ try:
 				self.app.setState(self.oldstate)
 				self.app.gametimer.unpause()
 			else:
-				self.actr.add_dm(Chunk("game-settings","game-settings",mines=self.app.mine_exists))
+				self.actr.add_dm(Chunk("settings","settings",mines=self.app.mine_exists))
 				self.resume = False
 				self.app.setState(self.app.STATE_SETUP)
 
@@ -219,57 +225,23 @@ try:
 			self.oldstate = self.app.state
 			self.app.setState(self.app.STATE_PAUSED)
 
-		@d.listen('hold-finger')
+		@d.listen('keydown')
 		def ACTR6_JNI_Event(self, model, params):
-			hand = params['hand']
-			finger = params['finger']
-			if hand == "LEFT":
-				if finger == "MIDDLE":
-					pygame.event.post(pygame.event.Event(pygame.KEYDOWN, {"key":ord('w')}))
-				elif finger == "RING":
-					pygame.event.post(pygame.event.Event(pygame.KEYDOWN, {"key":ord('a')}))
-				elif finger == "INDEX":
-					pygame.event.post(pygame.event.Event(pygame.KEYDOWN, {"key":ord('d')}))
-			elif hand == "RIGHT":
-				if finger == "INDEX":
-					pygame.event.post(pygame.event.Event(pygame.KEYDOWN, {"key":ord('j')}))
-				elif finger == "MIDDLE":
-					pygame.event.post(pygame.event.Event(pygame.KEYDOWN, {"key":ord('k')}))
-				elif finger == "RING":
-					pygame.event.post(pygame.event.Event(pygame.KEYDOWN, {"key":ord('l')}))
-				elif finger == "PINKY":
-					pygame.event.post(pygame.event.Event(pygame.KEYDOWN, {"key":ord('\r')}))
-				elif finger == "THUMB":
-					pygame.event.post(pygame.event.Event(pygame.KEYDOWN, {"key":ord(' ')}))
+			pygame.event.post(pygame.event.Event(pygame.KEYDOWN, {"key":params['keycode']}))
 
-		@d.listen('release-finger')
+		@d.listen('keyup')
 		def ACTR6_JNI_Event(self, model, params):
-			hand = params['hand']
-			finger = params['finger']
-			if hand == "LEFT":
-				if finger == "MIDDLE":
-					pygame.event.post(pygame.event.Event(pygame.KEYUP, {"key":ord('w')}))
-				elif finger == "RING":
-					pygame.event.post(pygame.event.Event(pygame.KEYUP, {"key":ord('a')}))
-				elif finger == "INDEX":
-					pygame.event.post(pygame.event.Event(pygame.KEYUP, {"key":ord('d')}))
-			elif hand == "RIGHT":
-				if finger == "INDEX":
-					pygame.event.post(pygame.event.Event(pygame.KEYUP, {"key":ord('j')}))
-				elif finger == "MIDDLE":
-					pygame.event.post(pygame.event.Event(pygame.KEYUP, {"key":ord('k')}))
-				elif finger == "RING":
-					pygame.event.post(pygame.event.Event(pygame.KEYUP, {"key":ord('l')}))
-				elif finger == "PINKY":
-					pygame.event.post(pygame.event.Event(pygame.KEYUP, {"key":ord('\r')}))
-				elif finger == "THUMB":
-					pygame.event.post(pygame.event.Event(pygame.KEYUP, {"key":ord(' ')}))
+			pygame.event.post(pygame.event.Event(pygame.KEYUP, {"key":params['keycode']}))
 
 		@d.listen('mousemotion')
 		def ACTR6_JNI_Event(self, model, params):
 			pass # No mouse in Space Fortress
 
-		@d.listen('mouseclick')
+		@d.listen('mousedown')
+		def ACTR6_JNI_Event(self, model, params):
+			pass # No mouse in Space Fortress
+
+		@d.listen('mouseup')
 		def ACTR6_JNI_Event(self, model, params):
 			pass # No mouse in Space Fortress
 

@@ -441,7 +441,7 @@ class Game(object):
                         if event.key == pygame.K_q:
                             self.gameevents.add("press", "quit", type='EVENT_USER')
 
-                    if event.key == pygame.K_RETURN:
+                    if event.key == pygame.K_RETURN or event.key == 10:
 
                         if self.state == self.STATE_INTRO:
                             self.setState(self.STATE_SETUP)
@@ -625,7 +625,7 @@ class Game(object):
             self.score.mines = self.score.__getattribute__("mines")
             self.score.bonus = self.score.__getattribute__("bonus")
 
-            if self.gametimer.elapsed() > self.config['General']['game_time']:
+            if self.config['General']['game_time'] > 0 and self.gametimer.elapsed() > self.config['General']['game_time']:
                 self.gameevents.add("game", "over", type='EVENT_SYSTEM')
                 self.setState(self.STATE_SCORES)
 

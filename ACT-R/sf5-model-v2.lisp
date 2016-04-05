@@ -8,7 +8,7 @@
 (defmacro defp* (&rest body)
   `(p*-fct ',body))
 
-(defun run-until-break (&key (real-time nil))
+(defun run-until-break (&key (real-time t))
   (run-until-condition (lambda () nil) :real-time real-time))
 
 (defun degrees (x) (* x (/ 180 pi)))
@@ -44,17 +44,18 @@
      )
 
 ;;; Goals
-(chunk-type study-mine-letters state)
-(chunk-type monitor)
-(chunk-type shoot-fortress subgoal)
-(chunk-type shoot-mine subgoal)
-(chunk-type avoid-shells subgoal)
-(chunk-type avoid-fortress subgoal)
-(chunk-type avoid-warping subgoal)
-(chunk-type avoid-mine subgoal)
+;(chunk-type study-mine-letters state)
+;(chunk-type monitor)
+;(chunk-type shoot-fortress subgoal)
+;(chunk-type shoot-mine subgoal)
+;(chunk-type avoid-shells subgoal)
+;(chunk-type avoid-fortress subgoal)
+;(chunk-type avoid-warping subgoal)
+;(chunk-type avoid-mine subgoal)
 
 ;;; New chunk types
-(chunk-type game-settings mines)
+(chunk-type settings mines)
+(chunk-type game (settings t) (number t) (state t))
 (chunk-type (token-location (:include visual-location)) orientation velocity)
 (chunk-type (token-object (:include visual-object)) orientation velocity)
 (chunk-type (ship (:include token-object)))
@@ -65,8 +66,32 @@
 (chunk-type (rect-location (:include visual-location)) top bottom left right)
 (chunk-type (rect-object (:include visual-object)) top bottom left right)
 (chunk-type (world-border (:include rect-object)))
+(chunk-type mine-letters (letter1 t) (letter2 t) (letter3 t))
 
-(chunk-type mine-letters letter1 letter2 letter3)
+(dolist (c '(study-mines avoid-shell avoid-border avoid-fortress shoot fly))
+  (define-chunks-fct (list (list c))))
+
+;(set-hand-location left 3 4)  
+;(move-a-finger (get-module :motor) 'left 'middle 1 -1.57)
+;(set-hand-location right 12 4)
+
+(defmethod home-hands ((mtr-mod motor-module))
+  (setf (loc (left-hand mtr-mod)) #(3 4))
+  (setf (fingers (left-hand mtr-mod))
+    (list (list 'index #(0 0)) ;; d
+          (list 'middle #(-1 -1)) ;; w
+          (list 'ring #(-2 0)) ;; a
+          (list 'pinkie #(-3 1)) ;; shift
+          (list 'thumb #(1 2)))) ;; space
+    (setf (loc (right-hand mtr-mod)) #(7 4))
+    (setf (fingers (right-hand mtr-mod))
+      (list (list 'index #(0 0)) ;; j
+            (list 'middle #(1 0)) ;; k
+            (list 'ring #(2 0)) ;; l
+            (list 'pinkie #(5 0)) ;; enter
+            (list 'thumb #(-1 2))))) ;; space
+
+(home-hands (get-module :motor))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Productions
@@ -74,27 +99,149 @@
 
 (defp **start**
   ?goal> buffer empty
-  ?retrieval> buffer empty state free
-  ?manual> processor free
-  ?manual-right> pinkie free pinkie up
+  ?retrieval> state free
   ==>
-  +retrieval> isa game-settings
-  +manual> isa delayed-punch hand right finger pinkie
+  +goal> isa game
+  +retrieval> isa settings
   )
 
 (defp **prep-new-game**
-  ?goal> buffer empty
-  retrieval> isa game-settings
+  =goal> settings t number t state t
+  =retrieval> isa settings
   ==>
-  +goal> retrieval
+  *goal> settings =retrieval
   )
 
-(defp **new-game**
-  ?goal> buffer empty
-  ?retrieval> buffer empty state free
+(defp **get-game-number**
+  =goal> - settings t number t state t
+  ?visual-location> state free buffer empty
+  ==>
+  +visual-location> kind text color "yellow"
+  )
+
+(defp **attend-game-number**
+  =goal> - settings t number t state t
+  =visual-location> kind text color "yellow"
+  ?visual> state free buffer empty
+  ==>
+  +visual> isa move-attention screen-pos =visual-location
+  )
+
+(defp **store-game-number**
+  =goal> - settings t number t state t
+  =visual> kind text color "yellow" number =number
+  ==>
+  *goal> number =number
+  )
+
+(defp **ready-to-study-mines**
+  =goal> - settings t - number t state t
   ?manual> processor free
   ?manual-right> pinkie free pinkie up
   ==>
-  +retrieval> isa game-settings
   +manual> isa delayed-punch hand right finger pinkie
+  *goal> state study-mines
+  +imaginal> isa mine-letters
+  )
+
+(defp **get-mine-letter-unstuffed**
+  =goal> state study-mines
+  ?visual-location> state free buffer empty
+  ?manual> state free
+  ?visual> state free buffer empty
+  ?imaginal> - buffer empty state free
+  =imaginal> letter1 =letter1 letter2 =letter2 letter3 =letter3
+  ==>
+  =imaginal>
+  +visual-location> kind text color "white" - value =letter1 - value =letter2 - value =letter3
+  )
+
+(defp **get-mine-letter-stuffed**
+  =goal> state study-mines
+  =visual-location> color "yellow"
+  ?manual> state free
+  ?visual> state free
+  ?imaginal> - buffer empty state free
+  =imaginal> letter1 =letter1 letter2 =letter2 letter3 =letter3
+  ==>
+  =imaginal>
+  +visual-location> kind text color "white" - value =letter1 - value =letter2 - value =letter3
+  )
+
+(defp **attend-letter**
+  =goal> state study-mines
+  =imaginal> letter1 =letter1 letter2 =letter2 letter3 =letter3
+  =visual-location> kind text color "white" - value =letter1 - value =letter2 - value =letter3
+  ?visual> state free
+  ?imaginal> - buffer empty
+  ==>
+  =imaginal>
+  +visual> isa move-attention screen-pos =visual-location
+  =visual-location>
+  )
+
+(defp **store-letter-1**
+  =goal> state study-mines
+  =visual> kind text color "white" value =letter
+  =imaginal> letter1 t - letter2 =letter - letter3 =letter
+  ?imaginal> - buffer empty state free
+  ==>
+  *imaginal> letter1 =letter
+  -visual-location>
+  )
+
+(defp **store-letter-2**
+  =goal> state study-mines
+  =visual> kind text color "white" value =letter
+  =imaginal> - letter1 =letter letter2 t - letter3 =letter
+  ?imaginal> - buffer empty state free
+  ==>
+  *imaginal> letter2 =letter
+  -visual-location>
+  )
+
+(defp **store-letter-3**
+  =goal> state study-mines
+  =visual> kind text color "white" value =letter
+  =imaginal> - letter1 =letter - letter2 =letter letter3 t
+  ?imaginal> - buffer empty state free
+  ==>
+  *imaginal> letter3 =letter
+  -visual-location>
+  )
+
+(defp **done-studying-letters**
+  =goal> state study-mines
+  =imaginal> - letter1 t - letter2 t - letter3 t
+  ?manual> processor free
+  ?manual-right> pinkie free pinkie up
+  ==>
+  +manual> isa delayed-punch hand right finger pinkie
+  +goal> state fly
+  )
+
+(defp **thrust**
+  =goal> state fly
+  ?manual> processor free
+  ?manual-left> pinkie free middle up
+  ==>
+  +manual> isa delayed-punch hand left finger middle
+  )
+
+
+(defp **left**
+  =goal> state fly
+  ?manual> processor free
+  ?manual-left> pinkie free ring up
+  ==>
+  +manual> isa delayed-punch hand left finger ring
+  )
+
+
+(defp **right**
+  =goal> state fly
+  ?manual> processor free
+  ?manual-left> pinkie free index up
+  ==>
+  +manual> isa delayed-punch hand left finger index
   )
