@@ -29,7 +29,10 @@
 
 (jni-register-event-hook :break (lambda () (schedule-break-after-all)))
 
-(sgp :jni-hostname "127.0.0.1" :jni-port 5555 :jni-sync t)
+(sgp :jni-hostname "127.0.0.1"
+     :jni-port 5555
+     :jni-sync t
+     :jni-remote-config (jsown:to-json '(:obj ("Mine" . (:obj ("mine_exists" . (:obj ("value" . :F))))))))
 
 (sgp :needs-mouse nil
      :v t
@@ -71,7 +74,7 @@
 (dolist (c '(study-mines avoid-shell avoid-border avoid-fortress shoot fly))
   (define-chunks-fct (list (list c))))
 
-;(set-hand-location left 3 4)  
+;(set-hand-location left 3 4)
 ;(move-a-finger (get-module :motor) 'left 'middle 1 -1.57)
 ;(set-hand-location right 12 4)
 
