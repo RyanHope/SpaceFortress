@@ -9,11 +9,11 @@ def get_config_home():
     if platform.system() == 'Windows':
         config_home = os.path.join(os.environ['APPDATA'], 'SpaceFortress')
     elif platform.system() == 'Linux':
-        config_home = os.path.join(os.environ.get('XDG_CONFIG_HOME', os.path.join(_home, '.config')), 'spacefortress')
+        config_home = os.path.join(os.environ.get('XDG_CONFIG_HOME', os.path.join(_home, '.config')), 'SpaceFortress')
     elif platform.system() == 'Darwin':
         config_home = os.path.join(_home, 'Library', 'Application Support', 'SpaceFortress')
     else:
-        config_home = os.path.join(_home, '.spacefortress')
+        config_home = os.path.join(_home, '.SpaceFortress')
     if not os.path.exists(config_home):
         os.makedirs(config_home)
     return config_home
@@ -22,7 +22,7 @@ def get_plugin_home():
     return os.path.join(get_config_home(), 'Plugins')
 
 def get_user_file():
-    return os.path.join(get_config_home(), 'config')
+    return os.path.join(get_config_home(), 'config.json')
 
 def load_plugins(app, dir, plugins):
     dir = os.path.abspath(dir)

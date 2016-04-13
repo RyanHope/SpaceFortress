@@ -10,12 +10,14 @@ try:
 	import pygame
 	import pygl2d
 	import webcolors
+	import time
+
 
 	SDLK_SCANCODE_MASK = 1 << 30
 
 	def SDL_SCANCODE_TO_KEYCODE(x):
-	    """Converts the passed scancode to a keycode value."""
-	    return x | SDLK_SCANCODE_MASK
+		"""Converts the passed scancode to a keycode value."""
+		return x | SDLK_SCANCODE_MASK
 
 	class TokenChunk(VisualChunk):
 		def get_visual_location(self):
@@ -78,6 +80,7 @@ try:
 			super(SF5Plugin, self).__init__()
 			self.app = app
 			self.actr = None
+			self.config = True
 
 		def ready(self):
 			if self.app.config[self.name]['enabled']:
@@ -215,6 +218,11 @@ try:
 				self.app.setState(self.oldstate)
 				self.app.gametimer.unpause()
 			else:
+				for c in params["config"].keys():
+						for s in params["config"].keys():
+							self.app.config.update_setting_value(c, s, params["config"][c][s]['value'])
+
+
 				self.actr.add_dm(Chunk("settings","settings",mines=self.app.mine_exists))
 				self.resume = False
 				self.app.setState(self.app.STATE_SETUP)

@@ -32,7 +32,7 @@
 (sgp :jni-hostname "127.0.0.1"
      :jni-port 5555
      :jni-sync t
-     :jni-remote-config (jsown:to-json '(:obj ("Mine" . (:obj ("mine_exists" . (:obj ("value" . :F))))))))
+     :jni-remote-config '(:obj ("Mine" . (:obj ("mine_exists" . (:obj ("value" . :F)))))))
 
 (sgp :needs-mouse nil
      :v t
