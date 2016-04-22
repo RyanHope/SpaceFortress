@@ -77,10 +77,10 @@ def get_config():
     cfg.add_setting('General', 'sound', True, alias='Sound', type=CT_CHECKBOX, about='Enable/disable sound')
     cfg.add_setting('General', 'allow_pause', True, alias='Allow Pausing', type=CT_CHECKBOX, about='Enable/disable whether or not pausing is allowed.')
 
-    cfg.add_setting('Display', 'display_mode', 'Fullscreen', alias='Display Mode', options=['Fullscreen', 'Current', 'Windowed', 'Fake Fullscreen'], type=CT_COMBO, about='Run at full screen? Set to f to run in a window')
+    cfg.add_setting('Display', 'display_mode', 'Windowed', alias='Display Mode', options=['Fullscreen', 'Current', 'Windowed', 'Fake Fullscreen'], type=CT_COMBO, about='Run at full screen? Set to f to run in a window')
     cfg.add_setting('Display', 'linewidth', 1, alias='Linewidth', about='Width of lines drawn on screen. Increase for a more "projector-friendly" game')
-    cfg.add_setting('Display', 'screen_width', 0, alias='Screen Width', type=CT_SPINBOX)
-    cfg.add_setting('Display', 'screen_height', 0, alias='Screen Height', type=CT_SPINBOX)
+    cfg.add_setting('Display', 'screen_width', 1024, alias='Screen Width', type=CT_SPINBOX)
+    cfg.add_setting('Display', 'screen_height', 768, alias='Screen Height', type=CT_SPINBOX)
     cfg.add_setting('Display', 'pause_overlay', True, alias='Pause Overlay', type=CT_CHECKBOX, about='Blank screen and show "Paused!" when game is paused.')
     cfg.add_setting('Display', 'show_fps', False, type=CT_CHECKBOX)
     cfg.add_setting('Display', 'show_et', False, type=CT_CHECKBOX)

@@ -241,14 +241,14 @@ class Game(object):
 		self.fp.seek(0)
 		self.f36 = pygame.font.Font(self.fp, int(36 * self.aspect_ratio))
 
-		self.snd_shell_fired = Sound(self, pkg_resources.resource_stream("resources", "sounds/shellfired.wav"))
-		self.snd_missile_fired = Sound(self, pkg_resources.resource_stream("resources", "sounds/missilefired.wav"))
-		self.snd_explosion = Sound(self, pkg_resources.resource_stream("resources", "sounds/expfort.wav"))
-		self.snd_collision = Sound(self, pkg_resources.resource_stream("resources", "sounds/collision.wav"))
-		self.snd_vlner_reset = Sound(self, pkg_resources.resource_stream("resources", "sounds/vulnerzeroed.wav"))
-		self.snd_bonus_success = Sound(self, pkg_resources.resource_stream("resources", "sounds/bonus_success.wav"))
-		self.snd_bonus_fail = Sound(self, pkg_resources.resource_stream("resources", "sounds/bonus_fail.wav"))
-		self.snd_empty = Sound(self, pkg_resources.resource_stream("resources", "sounds/emptychamber.wav"))
+		self.snd_shell_fired = pygame.mixer.Sound(pkg_resources.resource_stream("resources", "sounds/shellfired.wav"))
+		self.snd_missile_fired = pygame.mixer.Sound(pkg_resources.resource_stream("resources", "sounds/missilefired.wav"))
+		self.snd_explosion = pygame.mixer.Sound(pkg_resources.resource_stream("resources", "sounds/expfort.wav"))
+		self.snd_collision = pygame.mixer.Sound(pkg_resources.resource_stream("resources", "sounds/collision.wav"))
+		self.snd_vlner_reset = pygame.mixer.Sound(pkg_resources.resource_stream("resources", "sounds/vulnerzeroed.wav"))
+		self.snd_bonus_success = pygame.mixer.Sound(pkg_resources.resource_stream("resources", "sounds/bonus_success.wav"))
+		self.snd_bonus_fail = pygame.mixer.Sound(pkg_resources.resource_stream("resources", "sounds/bonus_fail.wav"))
+		self.snd_empty = pygame.mixer.Sound(pkg_resources.resource_stream("resources", "sounds/emptychamber.wav"))
 
 		if self.config['Display']['display_mode'] == 'Fullscreen' or self.config['Display']['display_mode'] == 'Current':
 			self.screen = pygl2d.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.FULLSCREEN | pygame.DOUBLEBUF)
@@ -376,6 +376,7 @@ class Game(object):
 
 		if self.config['Mine']['mine_exists']:
 			self.mine_list = MineList(self)
+			self.mine_list.timer.reset()
 		else:
 			self.mine_list = None
 
@@ -400,7 +401,6 @@ class Game(object):
 		self.score.shots = self.config['Missile']['missile_num']
 
 		self.flighttimer.reset()
-		self.mine_list.timer.reset()
 		if self.config['Graphics']['parallax_mode'] == 'Fortress':
 			self.starfield_orientation = self.fortress.orientation
 		else:
@@ -543,6 +543,12 @@ class Game(object):
 				self.setState(self.STATE_GAMENO)
 				self.gameevents.add("display_game", self.current_game)
 			self.setup_world()
+		elif self.state == self.STATE_GAMENO:
+			if self.config['General']['games_per_session'] == 0:
+				if self.config['Mine']['mine_exists']:
+					self.setState(self.STATE_SETUP_IFF)
+				else:
+					self.setState(self.STATE_PLAY)
 		elif self.state == self.STATE_SETUP_IFF:
 			self.mine_list.generate_foes()
 			self.gameevents.add("display_foes", " ".join(self.mine_list.foe_letters), "player")
@@ -591,7 +597,7 @@ class Game(object):
 					self.gameevents.add("spawn", "mine")
 				elif self.mine_list.flag and self.mine_list.timer.elapsed() > self.mine_list.timeout:
 					self.gameevents.add("timeout", "mine")
-			self.mine_list.compute()
+				self.mine_list.compute()
 			self.check_bounds()
 			#test collisions to generate game events
 			self.test_collisions()
@@ -671,7 +677,7 @@ class Game(object):
 				elif obj == "iff":
 					#print len(self.mine_list)
 					#don't do anything if there's no mine on the screen
-					if len(self.mine_list) == 0:
+					if not self.mine_list or len(self.mine_list) == 0:
 						pass
 					elif self.mine_list[0].tagged == "fail":
 						self.gameevents.add("tag", "already_failed")
@@ -712,7 +718,8 @@ class Game(object):
 									self.bonus.flag = True
 						else: #AX-CPT
 							if self.bonus.axcpt_flag == True and (self.bonus.state == "iti" or self.bonus.state == "target") and self.bonus.current_pair == "ax":
-								self.snd_bonus_success.play()
+								if self.config['General']['sound']:
+									self.snd_bonus_success.play()
 								self.capturedBonuses += 1
 								self.gameevents.add("shots_bonus_capture")
 								self.gameevents.add("score+", "shots", self.config['Score']['bonus_missiles'])
@@ -722,7 +729,8 @@ class Game(object):
 									self.gameevents.add("score+", "bonus", self.config['Score']['bonus_points'] / 2)
 							elif self.bonus.axcpt_flag:
 								self.bonus.axcpt_flag = False
-								self.snd_bonus_fail.play()
+								if self.config['General']['sound']:
+									self.snd_bonus_fail.play()
 								self.gameevents.add("shots_bonus_failure")
 								if self.config['General']['next_gen']:
 									self.gameevents.add("score-", "pnts", self.config['Score']['bonus_points'] / 2)
@@ -748,7 +756,8 @@ class Game(object):
 									self.bonus.flag = True
 						else: #AX-CPT
 							if self.bonus.axcpt_flag == True and (self.bonus.state == "iti" or self.bonus.state == "target") and self.bonus.current_pair == "ax":
-								self.snd_bonus_success.play()
+								if self.config['General']['sound']:
+									self.snd_bonus_success.play()
 								self.capturedBonuses += 1
 								self.gameevents.add("pnts_bonus_capture")
 								if self.config['General']['next_gen']:
@@ -758,7 +767,8 @@ class Game(object):
 									self.gameevents.add("score+", "bonus", self.config['Score']['bonus_points'])
 							elif self.bonus.axcpt_flag:
 								self.bonus.axcpt_flag = False
-								self.snd_bonus_fail.play()
+								if self.config['General']['sound']:
+									self.snd_bonus_fail.play()
 								self.gameevents.add("pnts_bonus_failure")
 								if self.config['General']['next_gen']:
 									self.gameevents.add("score-", "pnts", self.config['Score']['bonus_points'] / 2)
@@ -768,7 +778,8 @@ class Game(object):
 				if obj == "ship":
 					self.deaths += 1
 					self.reset_position()
-					self.reset_mines()
+					if self.mine_list:
+						self.reset_mines()
 			elif command == "bonus_available":
 				self.totalBonuses += 1
 			elif command == "first_tag":
@@ -868,7 +879,7 @@ class Game(object):
 
 		elif obj.startswith("missile_"):
 			#if missile hits fortress, need to check if it takes damage when mine is onscreen
-			if target == "fortress" and (len(self.mine_list) == 0 or self.config['Fortress']['hit_fortress_while_mine']):
+			if target == "fortress" and ((self.mine_list and len(self.mine_list) == 0) or self.config['Fortress']['hit_fortress_while_mine']):
 				if self.ship.shot_timer.elapsed() >= self.config['Fortress']['vlner_time']:
 					self.gameevents.add("score+", "vlner", 1)
 				if self.ship.shot_timer.elapsed() < self.config['Fortress']['vlner_time'] and self.score.vlner >= self.config['Fortress']['vlner_threshold']:
@@ -878,7 +889,8 @@ class Game(object):
 					#if r:
 					#	self.explosion.rotate(r)
 					self.fortress.reset_timer.reset()
-					self.snd_explosion.play()
+					if self.config['General']['sound']:
+						self.snd_explosion.play()
 					self.gameevents.add("score+", "pnts", self.config['Score']['destroy_fortress'])
 					self.gameevents.add("score+", "fortress", self.config['Score']['destroy_fortress'])
 					self.score.vlner = 0
@@ -891,7 +903,8 @@ class Game(object):
 				elif self.ship.shot_timer.elapsed() < self.config['Fortress']['vlner_time'] and self.score.vlner < self.config['Fortress']['vlner_threshold']:
 					self.gameevents.add("reset", "VLNER")
 					self.score.vlner = 0
-					self.snd_vlner_reset.play()
+					if self.config['General']['sound']:
+						self.snd_vlner_reset.play()
 				self.ship.shot_timer.reset()
 			elif target.startswith("mine_"):
 				#deal with missile hitting mine
@@ -992,15 +1005,17 @@ class Game(object):
 			if self.config['Fortress']['fortress_exists'] and missile.collide(self.fortress):
 				self.gameevents.add("collide", "missile_" + str(i), "fortress")
 				del_missile = True
-			for j, mine in enumerate(self.mine_list):
-				if missile.collide(mine) and not missile.collide(self.fortress):
-					self.gameevents.add("collide", "missile_" + str(i), "mine_" + str(j))
-					del_missile = True
+			if self.mine_list:
+				for j, mine in enumerate(self.mine_list):
+					if missile.collide(mine) and not missile.collide(self.fortress):
+						self.gameevents.add("collide", "missile_" + str(i), "mine_" + str(j))
+						del_missile = True
 			if del_missile:
 				del self.missile_list[i]
-		for i, mine in enumerate(self.mine_list):
-			if mine.collide(self.ship):
-				self.gameevents.add("collide", "mine_" + str(i), "ship")
+		if self.mine_list:
+			for i, mine in enumerate(self.mine_list):
+				if mine.collide(self.ship):
+					self.gameevents.add("collide", "mine_" + str(i), "ship")
 
 	def check_bounds(self):
 		"""determine whether any shells or missiles have left the world"""
@@ -1017,7 +1032,8 @@ class Game(object):
 
 	def reset_position(self):
 		"""pauses the game and resets"""
-		self.snd_explosion.play()
+		if self.config['General']['sound']:
+			self.snd_explosion.play()
 		pygame.time.delay(1000)
 		self.score.iff = ""
 		self.ship.alive = True
@@ -1081,7 +1097,8 @@ class Game(object):
 		else:
 			self.explosion_small_rect.center = (self.ship.position.x, self.ship.position.y)
 			self.explosion_small.draw(self.explosion_small_rect.topleft)
-		self.mine_list.draw()
+		if self.mine_list:
+			self.mine_list.draw()
 		if self.config['Bonus']['bonus_exists'] and self.bonus.visible:
 			self.bonus.draw()
 

@@ -21,7 +21,7 @@ try:
 
 	class TokenChunk(VisualChunk):
 		def get_visual_location(self):
-			chunk = super(TokenChunk, self).get_visual_location("token-location")
+			chunk = super(TokenChunk, self).get_visual_location()
 			for s, v in self.slots.iteritems():
 				if s in ["orientation", "velocity"]:
 					chunk["slots"][s] = v
@@ -29,46 +29,81 @@ try:
 
 	class RectChunk(VisualChunk):
 		def get_visual_location(self):
-			chunk = super(RectChunk, self).get_visual_location("rect-location")
+			chunk = super(RectChunk, self).get_visual_location()
 			for s, v in self.slots.iteritems():
 				if s in ["top","bottom","left","right"]:
 					chunk["slots"][s] = v
 			return chunk
 
 	def RenderTextToChunk(name, text, rect, **kwargs):
-		return VisualChunk(name, "text", rect.centerx, rect.centery,
-						rect.width, rect.height, webcolors.rgb_to_name(text.color),
-						value=text.text, **kwargs)
+		return VisualChunk(name, rect.centerx, rect.centery,
+						kind = ":text",
+						width = rect.width,
+						height = rect.height,
+						color = webcolors.rgb_to_name(text.color),
+						value = text.text,
+						**kwargs)
 
 	def ShipToChunk(ship, **kwargs):
-		return TokenChunk("ship", "ship", ship.position.x, ship.position.y,
-						ship.get_width(), ship.get_height(), color="yellow",
-						orientation=ship.orientation, velocity=ship.get_velocity(), **kwargs)
+		return TokenChunk("ship", ship.position.x, ship.position.y,
+						kind =  ":ship",
+						width = ship.get_width(),
+						height = ship.get_height(),
+						color = "yellow",
+						orientation = ship.orientation,
+						velocity = ship.get_velocity(),
+						**kwargs)
 
 	def FortressToChunk(fortress, **kwargs):
-		return TokenChunk("fortress", "fortress", fortress.position.x, fortress.position.y,
-						fortress.get_width(), fortress.get_height(), color="yellow",
-						orientation=fortress.orientation, velocity=fortress.get_velocity(), **kwargs)
+		return TokenChunk("fortress", fortress.position.x, fortress.position.y,
+						kind = ":fortress",
+						width = fortress.get_width(),
+						height = fortress.get_height(),
+						color = "yellow",
+						orientation = fortress.orientation,
+						velocity = fortress.get_velocity(),
+						**kwargs)
 
 	def ShellToChunk(shell, **kwargs):
-		return TokenChunk("shell%d" % shell._id, "shell", shell.position.x, shell.position.y,
-						shell.get_width(), shell.get_height(), color="red",
-						orientation=shell.orientation, velocity=shell.get_velocity(), **kwargs)
+		return TokenChunk("shell%d" % shell._id, shell.position.x, shell.position.y,
+						kind = ":shell",
+						width = shell.get_width(),
+						height = shell.get_height(),
+						color = "red",
+						orientation = shell.orientation,
+						velocity = shell.get_velocity(),
+						**kwargs)
 
 	def MissileToChunk(missile, **kwargs):
-		return TokenChunk("missile%d" % missile._id, "missile", missile.position.x, missile.position.y,
-						missile.get_width(), missile.get_height(), color="red",
-						orientation=missile.orientation, velocity=missile.get_velocity(), **kwargs)
+		return TokenChunk("missile%d" % missile._id, missile.position.x, missile.position.y,
+						kind = ":missile",
+						width = missile.get_width(),
+						height = missile.get_height(),
+						color = "red",
+						orientation = missile.orientation,
+						velocity = missile.get_velocity(),
+						**kwargs)
 
 	def MineToChunk(mine, **kwargs):
-		return TokenChunk("mine%d" % mine._id, "mine", mine.position.x, mine.position.y,
-						mine.get_width(), mine.get_height(), color="red",
-						orientation=mine.orientation, velocity=mine.get_velocity(), **kwargs)
+		return TokenChunk("mine%d" % mine._id, mine.position.x, mine.position.y,
+						kind = ":mine",
+						width = mine.get_width(),
+						height = mine.get_height(),
+						color = "red",
+						orientation = mine.orientation,
+						velocity = mine.get_velocity(),
+						**kwargs)
 
-	def RectToChunk(rect, name, isa, color, **kwargs):
-		return RectChunk(name, isa, rect.centerx, rect.centery, rect.width, rect.height,
-						top=rect.top, bottom=rect.bottom, left=rect.left, right=rect.right,
-						color=color, **kwargs)
+	def RectToChunk(rect, name, color, **kwargs):
+		return RectChunk(name, rect.centerx, rect.centery,
+						width = rect.width,
+						height = rect.height,
+						top = rect.top,
+						bottom = rect.bottom,
+						left = rect.left,
+						right = rect.right,
+						color=color,
+						**kwargs)
 
 	class SF5Plugin(object):
 
@@ -130,10 +165,10 @@ try:
 						elif args[5] == self.app.STATE_PLAY:
 							if not self.resume:
 								chunks = [
-										RectToChunk(self.app.world, "world-border", "world-border", "green"),
+										RectToChunk(self.app.world, "world-border", "green", kind=":world-border"),
 										ShipToChunk(self.app.ship)
 										]
-								if self.app.fortress_exists:
+								if self.app.config['Fortress']['fortress_exists']:
 									chunks.append(FortressToChunk(self.app.fortress))
 								self.actr.display_new(chunks)
 
@@ -170,7 +205,7 @@ try:
 							self.draw_model_wait_msg()
 						elif self.app.state == self.app.STATE_PLAY:
 							chunks = [ShipToChunk(self.app.ship)]
-							if self.app.fortress_exists:
+							if self.app.config['Fortress']['fortress_exists']:
 								chunks.append(FortressToChunk(self.app.fortress))
 								for shell in self.app.shell_list:
 									chunks.append(ShellToChunk(shell))
@@ -219,11 +254,13 @@ try:
 				self.app.gametimer.unpause()
 			else:
 				for c in params["config"].keys():
-						for s in params["config"].keys():
-							self.app.config.update_setting_value(c, s, params["config"][c][s]['value'])
-
-
-				self.actr.add_dm(Chunk("settings","settings",mines=self.app.mine_exists))
+					for s in params["config"][c].keys():
+						self.app.config.update_setting_value(c, s, params["config"][c][s]['value'])
+				slots = {}
+				slots['setting-mine-exists'] = self.app.config['Mine']['mine_exists']
+				slots['setting-fortress-exists'] = self.app.config['Fortress']['fortress_exists']
+				slots['setting-bonus-exists'] = self.app.config['Bonus']['bonus_exists']
+				self.actr.add_dm(Chunk("settings", **slots))
 				self.resume = False
 				self.app.setState(self.app.STATE_SETUP)
 

@@ -32,7 +32,7 @@
 (sgp :jni-hostname "127.0.0.1"
      :jni-port 5555
      :jni-sync t
-     :jni-remote-config '(:obj ("Mine" . (:obj ("mine_exists" . (:obj ("value" . :F)))))))
+     :jni-remote-config (:obj ("Mine" . (:obj ("mine_exists" . (:obj ("value" . :F)))))))
 
 (sgp :needs-mouse nil
      :v t
@@ -57,19 +57,19 @@
 ;(chunk-type avoid-mine subgoal)
 
 ;;; New chunk types
-(chunk-type settings mines)
-(chunk-type game (settings t) (number t) (state t))
-(chunk-type (token-location (:include visual-location)) orientation velocity)
-(chunk-type (token-object (:include visual-object)) orientation velocity)
-(chunk-type (ship (:include token-object)))
-(chunk-type (fortress (:include token-object)))
-(chunk-type (mine (:include token-object)))
-(chunk-type (shell (:include token-object)))
-(chunk-type (missile (:include token-object)))
-(chunk-type (rect-location (:include visual-location)) top bottom left right)
-(chunk-type (rect-object (:include visual-object)) top bottom left right)
-(chunk-type (world-border (:include rect-object)))
-(chunk-type mine-letters (letter1 t) (letter2 t) (letter3 t))
+; (chunk-type settings mines)
+; (chunk-type game)
+; (chunk-type (token-location (:include visual-location)) orientation velocity)
+; (chunk-type (token-object (:include visual-object)) orientation velocity)
+; (chunk-type (ship (:include token-object)))
+; (chunk-type (fortress (:include token-object)))
+; (chunk-type (mine (:include token-object)))
+; (chunk-type (shell (:include token-object)))
+; (chunk-type (missile (:include token-object)))
+; (chunk-type (rect-location (:include visual-location)) top bottom left right)
+; (chunk-type (rect-object (:include visual-object)) top bottom left right)
+; (chunk-type (world-border (:include rect-object)))
+; (chunk-type mine-letters (letter1 t) (letter2 t) (letter3 t))
 
 (dolist (c '(study-mines avoid-shell avoid-border avoid-fortress shoot fly))
   (define-chunks-fct (list (list c))))
@@ -104,12 +104,12 @@
   ?goal> buffer empty
   ?retrieval> state free
   ==>
-  +goal> isa game
-  +retrieval> isa settings
+  +goal> game-settings t game-number t game-state t
+  +retrieval> has-mines
   )
 
 (defp **prep-new-game**
-  =goal> settings t number t state t
+  =goal> game-settings t game-number t game-state t
   =retrieval> isa settings
   ==>
   *goal> settings =retrieval
